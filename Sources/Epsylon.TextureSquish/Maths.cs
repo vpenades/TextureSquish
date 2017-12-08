@@ -9,6 +9,13 @@ namespace Epsylon.TextureSquish
 {
     static class MathUtils
     {
+        public static void SwapElements<T>(this T[] array, int index1, int index2)
+        {
+            T tmp = array[index1];
+            array[index1] = array[index2];
+            array[index2] = tmp;
+        }
+
         public static int ToPackedInt565(this Vec3 colour)
         {
             // get the components in the correct range

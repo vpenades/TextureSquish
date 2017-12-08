@@ -65,13 +65,8 @@ namespace Epsylon.TextureSquish
             {
                 for (int j = i; j > 0 && dps[j] < dps[j - 1]; --j)
                 {
-                    var a = dps[j];
-                    dps[j] = dps[j - 1];
-                    dps[j - 1] = a;
-
-                    var b = m_order[orderIndex + j];
-                    m_order[orderIndex + j] = m_order[orderIndex + j - 1];
-                    m_order[orderIndex + j - 1] = b;
+                    dps.SwapElements(j, j - 1);
+                    m_order.SwapElements(orderIndex + j, orderIndex + j - 1);
                 }
             }
 
