@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="NvidiaTextureTools\x64\nvtt.dll" />
     <None Remove="squish_test_original.png" />
     <None Remove="test1.png" />
     <None Remove="test2.png" />
@@ -18,7 +19,7 @@
     <None Remove="UVGrid2.jpg" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup>    
     <Content Include="TestFiles\fight_of_thrones_by_orkimides-d6sa500.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -52,5 +53,15 @@
   <ItemGroup>    
     <ProjectReference Include="..\Epsylon.TextureSquish\Epsylon.TextureSquish.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Nvidia.TextureTools">
+      <HintPath>NvidiaTextureTools\Nvidia.TextureTools.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(ProjectDir)NvidiaTextureTools\x64\nvtt.dll&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
 
 </Project>
