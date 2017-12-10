@@ -19,6 +19,8 @@ namespace Epsylon.TextureSquish.UnitTests
 
             Utils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_large.png");
             Utils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_small.png");
+
+            Utils.ProcessFile("TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png");            
         }
 
     }

@@ -194,13 +194,16 @@ namespace Epsylon.TextureSquish
         private static void CompressImage(Bitmap srcImage, Byte[] blocks, CompressionMode flags)
         {
             // fix any bad flags
-            flags = flags.FixFlags();                     
+            flags = flags.FixFlags();
+
+            int block_width = (srcImage.Width + 3) / 4;
+            int block_height = (srcImage.Height + 3) / 4;
+
+            // if the number of chunks to process is not very large, we better skip parallel processing
+            if (block_width * block_height < 16) flags &= ~CompressionMode.UseParallelProcessing;
 
             if ((flags & CompressionMode.UseParallelProcessing) != 0)
             {
-                int block_width = (srcImage.Width + 3) / 4;
-                int block_height = (srcImage.Height + 3) / 4;
-
                 System.Threading.Tasks.Parallel.For
                     (
                     0,
@@ -237,11 +240,11 @@ namespace Epsylon.TextureSquish
                 var sourceRgba = new Byte[16 * 4];
 
                 // loop over blocks
-                for (int y = 0; y < srcImage.Height; y += 4)
+                for (int y = 0; y < block_height; ++y)
                 {
-                    for (int x = 0; x < srcImage.Width; x += 4)
+                    for (int x = 0; x < block_width; ++x)
                     {
-                        srcImage.CopyBlockTo(x, y, sourceRgba, out int mask);
+                        srcImage.CopyBlockTo(x*4, y*4, sourceRgba, out int mask);
 
                         // compress it into the output
                         block.CompressMasked(sourceRgba, mask, flags);

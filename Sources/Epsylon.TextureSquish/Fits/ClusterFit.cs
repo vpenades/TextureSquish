@@ -9,8 +9,7 @@ namespace Epsylon.TextureSquish
     class ClusterFit : ColourFit
     {
         private const int MAXITERATIONS = 8;
-
-        private static readonly Vec4 TWO = new Vec4(2.0f);
+        
         private static readonly Vec4 HALF_HALF2 = new Vec4(0.5f, 0.5f, 0.5f, 0.25f);
         private static readonly Vec4 HALF = new Vec4(0.5f);
         private static readonly Vec4 GRID = new Vec4(31.0f, 63.0f, 31.0f, 0.0f);
@@ -95,7 +94,7 @@ namespace Epsylon.TextureSquish
             for (int i = 0; i < count; ++i)
             {
                 int j = m_order[orderIndex + i];
-                var p = new Vec4(unweighted[j].X, unweighted[j].Y, unweighted[j].Z, 1.0f);
+                var p = new Vec4(unweighted[j], 1);
                 var w = new Vec4(weights[j]);
                 var x = p * w;
                 m_points_weights[i] = x;
@@ -137,11 +136,11 @@ namespace Epsylon.TextureSquish
                         Vec4 part2 = m_xsum_wsum - part1 - part0;
 
                         // compute least squares terms directly
-                        Vec4 alphax_sum = part1.MultiplyAdd(HALF_HALF2, part0);
-                        Vec4 alpha2_sum = alphax_sum.SplatW();
+                        Vec4 alphax_sum = HALF_HALF2.MultiplyAdd(part1, part0);
+                        Vec4 betax_sum  = HALF_HALF2.MultiplyAdd(part1, part2);
 
-                        Vec4 betax_sum = part1.MultiplyAdd(HALF_HALF2, part2);
-                        Vec4 beta2_sum = betax_sum.SplatW();
+                        Vec4 alpha2_sum = alphax_sum.SplatW();
+                        Vec4 beta2_sum  = betax_sum.SplatW();
 
                         Vec4 alphabeta_sum = (part1 * HALF_HALF2).SplatW();
 
@@ -157,10 +156,10 @@ namespace Epsylon.TextureSquish
                         b = GRID.MultiplyAdd(b, HALF).Truncate() * GRIDRCP;
 
                         // compute the error (we skip the constant xxsum)
-                        Vec4 e1 = (a * a).MultiplyAdd(alpha2_sum, b * b * beta2_sum);
+                        Vec4 e1 = (a * a * alpha2_sum) + (b * b * beta2_sum);
                         Vec4 e2 = a.NegativeMultiplySubtract(alphax_sum, a * b * alphabeta_sum);
                         Vec4 e3 = b.NegativeMultiplySubtract(betax_sum, e2);
-                        Vec4 e4 = TWO.MultiplyAdd(e3, e1);
+                        Vec4 e4 = e3 * 2 + e1;
 
                         // apply the metric to the error term
                         Vec4 e5 = e4 * m_metric;
@@ -178,8 +177,7 @@ namespace Epsylon.TextureSquish
                         }
 
                         // advance
-                        if (j == count)
-                            break;
+                        if (j == count) break;
                         part1 += m_points_weights[j];
                         ++j;
                     }
@@ -189,18 +187,15 @@ namespace Epsylon.TextureSquish
                 }
 
                 // stop if we didn't improve in this iteration
-                if (bestiteration != iterationIndex)
-                    break;
+                if (bestiteration != iterationIndex) break;
 
                 // advance if possible
                 ++iterationIndex;
-                if (iterationIndex == m_iterationCount)
-                    break;
+                if (iterationIndex == m_iterationCount) break;
 
                 // stop if a new iteration is an ordering that has already been tried
                 Vec3 axis = (bestend - beststart).GetVec3();
-                if (!ConstructOrdering(axis, iterationIndex))
-                    break;
+                if (!ConstructOrdering(axis, iterationIndex)) break;
             }
 
             // save the block if necessary
@@ -260,10 +255,10 @@ namespace Epsylon.TextureSquish
                             Vec4 part3 = m_xsum_wsum - part2 - part1 - part0;
 
                             // compute least squares terms directly
-                            Vec4 alphax_sum = part2.MultiplyAdd(ONETHIRD_ONETHIRD2, part1.MultiplyAdd(TWOTHIRDS_TWOTHIRDS2, part0));
-                            Vec4 alpha2_sum = alphax_sum.SplatW();
+                            Vec4 alphax_sum = ONETHIRD_ONETHIRD2.MultiplyAdd(part2, TWOTHIRDS_TWOTHIRDS2.MultiplyAdd(part1, part0));
+                            Vec4 betax_sum  = ONETHIRD_ONETHIRD2.MultiplyAdd(part1, TWOTHIRDS_TWOTHIRDS2.MultiplyAdd(part2, part3));
 
-                            Vec4 betax_sum = part1.MultiplyAdd(ONETHIRD_ONETHIRD2, part2.MultiplyAdd(TWOTHIRDS_TWOTHIRDS2, part3));
+                            Vec4 alpha2_sum = alphax_sum.SplatW();
                             Vec4 beta2_sum = betax_sum.SplatW();
 
                             Vec4 alphabeta_sum = TWONINETHS * (part1 + part2).SplatW();
@@ -280,10 +275,10 @@ namespace Epsylon.TextureSquish
                             b = GRID.MultiplyAdd(b, HALF).Truncate() * GRIDRCP;
 
                             // compute the error (we skip the constant xxsum)
-                            Vec4 e1 = (a * a).MultiplyAdd(alpha2_sum, b * b * beta2_sum);
+                            Vec4 e1 = (a * a * alpha2_sum) + (b * b * beta2_sum);
                             Vec4 e2 = a.NegativeMultiplySubtract(alphax_sum, a * b * alphabeta_sum);
                             Vec4 e3 = b.NegativeMultiplySubtract(betax_sum, e2);
-                            Vec4 e4 = TWO.MultiplyAdd(e3, e1);
+                            Vec4 e4 = e3 * 2 + e1;
 
                             // apply the metric to the error term
                             Vec4 e5 = e4 * m_metric;
