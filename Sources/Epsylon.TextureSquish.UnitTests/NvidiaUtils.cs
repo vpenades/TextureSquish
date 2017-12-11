@@ -37,11 +37,11 @@ namespace Epsylon.TextureSquish.UnitTests
             if ((flags & CompressionMode.Dxt3) != 0) outputFormat = Nvidia.TextureTools.Format.DXT3;
             if ((flags & CompressionMode.Dxt5) != 0) outputFormat = Nvidia.TextureTools.Format.DXT5;
 
-            var srcData = (Byte[])srcImage.Data.Clone();
+            srcImage = srcImage.Clone();
 
-            BGRAtoRGBA(srcData);
+            srcImage.SwapElements(2, 1, 0, 3);
 
-            var dataHandle = GCHandle.Alloc(srcData, GCHandleType.Pinned);
+            var dataHandle = GCHandle.Alloc(srcImage.Data, GCHandleType.Pinned);
             try
             {
                 var dataPtr = dataHandle.AddrOfPinnedObject();

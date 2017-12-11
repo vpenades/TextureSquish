@@ -16,7 +16,7 @@ namespace Epsylon.TextureSquish
             _Data = new byte[_Width * _Height * 4];
         }
 
-        public Bitmap(Byte[] rgba, int width, int height)
+        public Bitmap(Byte[] rgba, int width, int height, bool isPreMultiplied = false)
         {
             if (rgba == null) throw new ArgumentNullException(nameof(rgba));
             if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
@@ -24,16 +24,33 @@ namespace Epsylon.TextureSquish
             if (rgba.Length < (width * height * 4)) throw new ArgumentException(nameof(rgba));
 
             _Data = rgba;
+            _IsPreMultiplied = isPreMultiplied;
             _Width = width;
             _Height = height;
         }
 
-        private readonly Byte[] _Data;
+        public Bitmap Clone()
+        {
+            return new Bitmap((Byte[])_Data.Clone(), _Width, _Height)
+            {
+                _IsPreMultiplied = this._IsPreMultiplied
+            };
+        }
+
+        private readonly Byte[] _Data;        
         private readonly int _Width;
         private readonly int _Height;
 
+        private bool _IsPreMultiplied;
+
         public int Width => _Width;
         public int Height => _Height;
+
+
+        /// <summary>
+        /// True if the current bitmap has alpha premultiplied colors.
+        /// </summary>
+        public bool IsPreMultiplied => _IsPreMultiplied;
 
         public Byte[] Data => _Data;
 
@@ -119,6 +136,43 @@ namespace Epsylon.TextureSquish
                 }
             }
         }
+
+
+        public void SwapElements(int r,int g, int b, int a)
+        {
+            var tmp = new Byte[4];
+
+            for (var i = 0; i < _Data.Length; i += 4)
+            {
+                tmp[0] = _Data[i + 0];
+                tmp[1] = _Data[i + 1];
+                tmp[2] = _Data[i + 2];
+                tmp[3] = _Data[i + 3];
+
+                _Data[i + 0] = tmp[r];
+                _Data[i + 1] = tmp[g];
+                _Data[i + 2] = tmp[b];
+                _Data[i + 3] = tmp[a];
+            }
+        }
+
+        public void PremultiplyAlpha()
+        {
+            for (var i = 0; i < _Data.Length; i += 4)
+            {
+                var r = (int)_Data[i + 0];
+                var g = (int)_Data[i + 1];
+                var b = (int)_Data[i + 2];
+                var a = (int)_Data[i + 3];
+
+                _Data[i + 0] = (Byte)( (r * a) / 255);
+                _Data[i + 1] = (Byte)( (g * a) / 255);
+                _Data[i + 2] = (Byte)( (b * a) / 255);
+            }
+
+            _IsPreMultiplied = true;
+        }
+               
 
         /// <summary>
         /// Decompresses an image in memory.

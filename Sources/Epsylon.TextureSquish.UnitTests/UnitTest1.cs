@@ -22,17 +22,17 @@ namespace Epsylon.TextureSquish.UnitTests
         [TestMethod]
         public void ConversionTest1()
         {
-            SquishUtils.ProcessFile("TestFiles\\squish_test_original.png");            
+            SquishUtils.ProcessFile("TestFiles\\squish_test_original.png", TestContext);            
 
-            SquishUtils.ProcessFile("TestFiles\\UVGrid1.jpg");
-            SquishUtils.ProcessFile("TestFiles\\UVGrid2.jpg");
+            SquishUtils.ProcessFile("TestFiles\\UVGrid1.jpg", TestContext);
+            SquishUtils.ProcessFile("TestFiles\\UVGrid2.jpg", TestContext);
 
-            SquishUtils.ProcessFile("TestFiles\\Ivy1.png");
+            SquishUtils.ProcessFile("TestFiles\\Ivy1.png", TestContext);
 
-            SquishUtils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_large.png");
-            SquishUtils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_small.png");
+            SquishUtils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_large.png", TestContext);
+            SquishUtils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_small.png", TestContext);
 
-            SquishUtils.ProcessFile("TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png");            
+            SquishUtils.ProcessFile("TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png", TestContext);            
         }
 
         [TestMethod]

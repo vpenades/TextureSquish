@@ -51,6 +51,14 @@ namespace Epsylon.TextureSquish
         /// <summary>
         /// Weight the colour by alpha during cluster fit (disabled by default).
         /// </summary>
+        /// <remarks>
+        /// When doing Cluster compression, the kernel checks the most commonly
+        /// used colors of each block, given more weight to colors more commonly
+        /// used. Given that semitransparent pixels might be less important than
+        /// opaque pixels, we can weight in this behavior. The ideal usage of
+        /// this flag is for processing sprites with semitransparent edges.
+        /// This is NOT AlphaPremultiply.
+        /// </remarks>
         WeightColourByAlpha = 1024,
 
         /// <summary>

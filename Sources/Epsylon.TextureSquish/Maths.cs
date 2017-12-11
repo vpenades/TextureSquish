@@ -50,6 +50,11 @@ namespace Epsylon.TextureSquish
             return Vec4.Max(min, Vec4.Min(max, value));
         }
 
+        public static float LengthManhattan(this Vec3 v)
+        {
+            return Math.Abs(v.X) + Math.Abs(v.Y) + Math.Abs(v.Z);
+        }
+
         public static Vec3 Truncate(this Vec3 v)
         {
             return new Vec3(
@@ -65,6 +70,16 @@ namespace Epsylon.TextureSquish
         public static Vec4 SplatY(this Vec4 v) { return new Vec4(v.Y); }
         public static Vec4 SplatZ(this Vec4 v) { return new Vec4(v.Z); }
         public static Vec4 SplatW(this Vec4 v) { return new Vec4(v.W); }
+
+        public static Vec4 GetVec4(this Byte[] array, int startIndex)
+        {
+            var x = array[startIndex + 0];
+            var y = array[startIndex + 1];
+            var z = array[startIndex + 2];
+            var w = array[startIndex + 3];
+
+            return new Vec4((float)x / 255.0f, (float)y / 255.0f, (float)z / 255.0f, (float)w / 255.0f);
+        }
         
         /// <summary>
         /// a * b + c

@@ -41,16 +41,11 @@ namespace Epsylon.TextureSquish
                     // allocate a new point
                     if (j == i)
                     {
-                        // normalise coordinates to [0,1]
-                        float x = (float)rgba[4 * i + 0] / 255.0f;
-                        float y = (float)rgba[4 * i + 1] / 255.0f;
-                        float z = (float)rgba[4 * i + 2] / 255.0f;
-
                         // ensure there is always non-zero weight even for zero alpha
                         float w = (float)(rgba[4 * i + 3] + 1) / 256.0f;
 
                         // add the point
-                        m_points[m_count] = new Vec3(x, y, z);
+                        m_points[m_count] = new Vec3(rgba[4 * i + 0], rgba[4 * i + 1], rgba[4 * i + 2]) / 255.0f;
                         m_weights[m_count] = (weightByAlpha ? w : 1.0f);
                         m_remap[i] = m_count;
 
@@ -66,6 +61,7 @@ namespace Epsylon.TextureSquish
                         && (rgba[4 * i + 1] == rgba[4 * j + 1])
                         && (rgba[4 * i + 2] == rgba[4 * j + 2])
                         && (rgba[4 * j + 3] >= 128 || !isDxt1);
+
                     if (match)
                     {
                         // get the index of the match
@@ -90,7 +86,6 @@ namespace Epsylon.TextureSquish
         public int Count => m_count;
         public Vec3[] Points => m_points;
         public float[] Weights => m_weights;
-
         public bool IsTransparent => m_transparent;
 
         public void RemapIndices(Byte[] source, Byte[] target)
@@ -98,16 +93,18 @@ namespace Epsylon.TextureSquish
             for (int i = 0; i < 16; ++i)
             {
                 int j = m_remap[i];
-                if (j == -1) target[i] = 3;
-                else         target[i] = source[j];
+
+                target[i] = j == -1 ? (Byte)3 : source[j];
             }
         }
 
-        int m_count;
+        private int m_count;
+        private bool m_transparent;
+
         private readonly Vec3[] m_points = new Vec3[16];
         private readonly float[] m_weights = new float[16];
         private readonly int[] m_remap = new int[16];
-        bool m_transparent;
+        
     };
 
 }
