@@ -6,6 +6,10 @@ namespace Epsylon.TextureSquish
 {
     class RangeFit : ColourFit
     {
+        private static readonly Vec3 GRID = new Vec3(31.0f, 63.0f, 31.0f);
+        private static readonly Vec3 GRIDRCP = Vec3.One / GRID;
+        private static readonly Vec3 HALF = new Vec3(0.5f);
+
         public RangeFit(ColourSet colours, CompressionOptions flags) : base(colours)
         {
             // initialise the metric
@@ -59,12 +63,8 @@ namespace Epsylon.TextureSquish
             end   =   end.Clamp(Vec3.Zero, Vec3.One);
 
             // clamp to the grid and save
-            Vec3 grid    = new Vec3(31.0f, 63.0f, 31.0f);
-            Vec3 gridrcp = new Vec3(1) / grid;
-            Vec3 half    = new Vec3(0.5f);
-
-            m_start = (grid * start + half).Truncate() * gridrcp;
-            m_end =   (grid *   end + half).Truncate() * gridrcp;
+            m_start = (GRID * start + HALF).Truncate() * GRIDRCP;
+            m_end =   (GRID *   end + HALF).Truncate() * GRIDRCP;
         }
 
         protected override void Compress3(BlockWindow block)
@@ -172,10 +172,11 @@ namespace Epsylon.TextureSquish
             }
         }
 
-        Vec3 m_metric;
-        Vec3 m_start;
-        Vec3 m_end;
-        float m_besterror;
+        private readonly Vec3 m_metric;
+        private readonly Vec3 m_start;
+        private readonly Vec3 m_end;
+
+        private float m_besterror;
     };
 
 }

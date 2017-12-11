@@ -121,23 +121,23 @@ namespace Epsylon.TextureSquish.UnitTests
                 srcImg.SquishImage(mode, options, context).Save(dstFileName);
             }
 
-            var flags = CompressionOptions.ColourRangeFit | CompressionOptions.UseParallelProcessing;            
+            var flags = CompressionOptions.ColourRangeFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;            
 
             process(CompressionMode.Dxt1 , flags, "Dx1-RangeFit.png");
-            process(CompressionMode.Dxt3 , flags, "Dx1-RangeFit.png");
-            process(CompressionMode.Dxt5 , flags, "Dx1-RangeFit.png");
+            process(CompressionMode.Dxt3 , flags, "Dx3-RangeFit.png");
+            process(CompressionMode.Dxt5 , flags, "Dx5-RangeFit.png");
 
-            flags = CompressionOptions.ColourClusterFit | CompressionOptions.UseParallelProcessing;
+            flags = CompressionOptions.ColourClusterFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
 
             process(CompressionMode.Dxt1 , flags, "Dx1-ClusterFit.png");
-            process(CompressionMode.Dxt3 , flags, "Dx1-ClusterFit.png");
-            process(CompressionMode.Dxt5 , flags, "Dx1-ClusterFit.png");
+            process(CompressionMode.Dxt3 , flags, "Dx3-ClusterFit.png");
+            process(CompressionMode.Dxt5 , flags, "Dx5-ClusterFit.png");
 
-            flags = CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing;
+            flags = CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
 
             process(CompressionMode.Dxt1 , flags, "Dx1-IterClusterFit.png");
-            process(CompressionMode.Dxt3 , flags, "Dx1-IterClusterFit.png");
-            process(CompressionMode.Dxt5 , flags, "Dx1-IterClusterFit.png");
+            process(CompressionMode.Dxt3 , flags, "Dx3-IterClusterFit.png");
+            process(CompressionMode.Dxt5 , flags, "Dx5-IterClusterFit.png");
         }        
     }
 
