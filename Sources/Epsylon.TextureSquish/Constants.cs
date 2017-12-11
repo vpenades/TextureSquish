@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Epsylon.TextureSquish
 {
-    [Flags]
+    
     public enum CompressionMode
     {
         /// <summary>
@@ -21,8 +21,12 @@ namespace Epsylon.TextureSquish
         /// <summary>
         /// Use DXT5 compression.
         /// </summary>
-        Dxt5 = 4,
+        Dxt5 = 4,        
+    }
 
+    [Flags]
+    public enum CompressionOptions
+    {
         /// <summary>
         /// Use a fast but low quality colour compressor.
         /// </summary>
@@ -36,7 +40,7 @@ namespace Epsylon.TextureSquish
         /// <summary>
         /// Use a very slow but very high quality colour compressor.
         /// </summary>
-        ColourIterativeClusterFit = 64,        
+        ColourIterativeClusterFit = 64,
 
         /// <summary>
         /// Use a perceptual metric for colour error (the default).
@@ -64,26 +68,24 @@ namespace Epsylon.TextureSquish
         /// <summary>
         /// Uses multithreading to increase compression speed.
         /// </summary>
-        UseParallelProcessing = 2048,        
+        UseParallelProcessing = 2048,
     }
 
-    static class CompressionModeUtils
+    static class ConstantsExtensions
     {
-        public static CompressionMode FixFlags(this CompressionMode flags)
+        public static CompressionOptions FixFlags(this CompressionOptions flags)
         {
-            // grab the flag bits
-            var method = flags & (CompressionMode.Dxt1 | CompressionMode.Dxt3 | CompressionMode.Dxt5);
-            var fit = flags & (CompressionMode.ColourIterativeClusterFit | CompressionMode.ColourClusterFit | CompressionMode.ColourRangeFit);
-            var metric = flags & (CompressionMode.ColourMetricPerceptual | CompressionMode.ColourMetricUniform);
-            var extra = flags & (CompressionMode.WeightColourByAlpha | CompressionMode.UseParallelProcessing);
+            // grab the flag bits            
+            var fit = flags & (CompressionOptions.ColourIterativeClusterFit | CompressionOptions.ColourClusterFit | CompressionOptions.ColourRangeFit);
+            var metric = flags & (CompressionOptions.ColourMetricPerceptual | CompressionOptions.ColourMetricUniform);
+            var extra = flags & (CompressionOptions.WeightColourByAlpha | CompressionOptions.UseParallelProcessing);
 
-            // set defaults
-            if (method != CompressionMode.Dxt3 && method != CompressionMode.Dxt5) method = CompressionMode.Dxt1;
-            if (fit != CompressionMode.ColourRangeFit) fit = CompressionMode.ColourClusterFit;
-            if (metric != CompressionMode.ColourMetricUniform) metric = CompressionMode.ColourMetricPerceptual;
+            // set defaults            
+            if (fit == 0) fit = CompressionOptions.ColourClusterFit;
+            if (metric == 0) metric = CompressionOptions.ColourMetricPerceptual;
 
             // done
-            return method | fit | metric | extra;
+            return fit | metric | extra;
         }        
     }
 }

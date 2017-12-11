@@ -10,11 +10,11 @@ namespace Epsylon.TextureSquish
     /// </summary>
     class ColourSet
     {
-        public ColourSet(Byte[] rgba, int mask, CompressionMode flags)
+        public ColourSet(Byte[] rgba, int mask, CompressionMode mode,CompressionOptions options)
         {
             // check the compression mode for dxt1
-            bool isDxt1 = ((flags & CompressionMode.Dxt1) != 0);
-            bool weightByAlpha = ((flags & CompressionMode.WeightColourByAlpha) != 0);
+            bool isDxt1 = ((mode & CompressionMode.Dxt1) != 0);
+            bool weightByAlpha = ((options & CompressionOptions.WeightColourByAlpha) != 0);
 
             // create the minimal set
             for (int i = 0; i < 16; ++i)

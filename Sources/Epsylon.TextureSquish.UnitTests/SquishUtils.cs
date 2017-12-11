@@ -87,15 +87,15 @@ namespace Epsylon.TextureSquish.UnitTests
             return dst;
         }
 
-        public static IMAGE SquishImage(this IMAGE srcImage, CompressionMode flags, TestContext context)
+        public static IMAGE SquishImage(this IMAGE srcImage, CompressionMode mode, CompressionOptions options, TestContext context)
         {
             var srcBitmap = srcImage.ToSquishImage();
 
             
 
-            var blocks = srcBitmap.Compress(flags);
+            var blocks = srcBitmap.Compress(mode,options);
 
-            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, flags);
+            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);
 
             var error = (int)(100.0f * dstBitmap.CompareToOriginal(srcBitmap));
 
@@ -114,30 +114,30 @@ namespace Epsylon.TextureSquish.UnitTests
             srcImg.SquishImageWithNvidia(CompressionMode.Dxt3).Save(System.IO.Path.ChangeExtension(filePath, "Dx3-Nvidia.png"));
             srcImg.SquishImageWithNvidia(CompressionMode.Dxt5).Save(System.IO.Path.ChangeExtension(filePath, "Dx5-Nvidia.png"));
 
-            void process(CompressionMode mode, string ext)
+            void process(CompressionMode mode,CompressionOptions options, string ext)
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
                 context.WriteLine($"{dstFileName} with {mode}");
-                srcImg.SquishImage(mode, context).Save(dstFileName);
+                srcImg.SquishImage(mode, options, context).Save(dstFileName);
             }
 
-            CompressionMode flags = CompressionMode.ColourRangeFit | CompressionMode.UseParallelProcessing;            
+            var flags = CompressionOptions.ColourRangeFit | CompressionOptions.UseParallelProcessing;            
 
-            process(CompressionMode.Dxt1 | flags, "Dx1-RangeFit.png");
-            process(CompressionMode.Dxt3 | flags, "Dx1-RangeFit.png");
-            process(CompressionMode.Dxt5 | flags, "Dx1-RangeFit.png");
+            process(CompressionMode.Dxt1 , flags, "Dx1-RangeFit.png");
+            process(CompressionMode.Dxt3 , flags, "Dx1-RangeFit.png");
+            process(CompressionMode.Dxt5 , flags, "Dx1-RangeFit.png");
 
-            flags = CompressionMode.ColourClusterFit | CompressionMode.UseParallelProcessing;
+            flags = CompressionOptions.ColourClusterFit | CompressionOptions.UseParallelProcessing;
 
-            process(CompressionMode.Dxt1 | flags, "Dx1-ClusterFit.png");
-            process(CompressionMode.Dxt3 | flags, "Dx1-ClusterFit.png");
-            process(CompressionMode.Dxt5 | flags, "Dx1-ClusterFit.png");
+            process(CompressionMode.Dxt1 , flags, "Dx1-ClusterFit.png");
+            process(CompressionMode.Dxt3 , flags, "Dx1-ClusterFit.png");
+            process(CompressionMode.Dxt5 , flags, "Dx1-ClusterFit.png");
 
-            flags = CompressionMode.ColourIterativeClusterFit | CompressionMode.UseParallelProcessing;
+            flags = CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing;
 
-            process(CompressionMode.Dxt1 | flags, "Dx1-IterClusterFit.png");
-            process(CompressionMode.Dxt3 | flags, "Dx1-IterClusterFit.png");
-            process(CompressionMode.Dxt5 | flags, "Dx1-IterClusterFit.png");
+            process(CompressionMode.Dxt1 , flags, "Dx1-IterClusterFit.png");
+            process(CompressionMode.Dxt3 , flags, "Dx1-IterClusterFit.png");
+            process(CompressionMode.Dxt5 , flags, "Dx1-IterClusterFit.png");
         }        
     }
 

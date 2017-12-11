@@ -10,15 +10,18 @@ namespace Epsylon.TextureSquish
         {
             _Array = array;
 
-            flags = flags.FixFlags();
+            _Mode = flags;            
 
-            _BytesPerBlock = ((flags & CompressionMode.Dxt1) != 0) ? 8 : 16;
-            _ColourOffset = (flags & (CompressionMode.Dxt3 | CompressionMode.Dxt5)) != 0 ? 8 : 0;
+            _BytesPerBlock = ((_Mode & CompressionMode.Dxt1) != 0) ? 8 : 16;
+            _ColourOffset = (_Mode & (CompressionMode.Dxt3 | CompressionMode.Dxt5)) != 0 ? 8 : 0;
         }
 
         private readonly Byte[] _Array;
         private readonly int _BytesPerBlock;
         private readonly int _ColourOffset;
+        private readonly CompressionMode _Mode;
+
+        public bool IsDtx1 => _Mode == CompressionMode.Dxt1;
 
         public int Offset { get; set; }
 
@@ -30,51 +33,7 @@ namespace Epsylon.TextureSquish
             set { System.Diagnostics.Debug.Assert(index >= 0 && index < _BytesPerBlock); _Array[Offset + index] = value; }
         }
 
-        private void WriteColourBlock(int a, int b, byte[] indices)
-        {
-            // write the endpoints
-            this[_ColourOffset + 0] = (Byte)(a & 0xff);
-            this[_ColourOffset + 1] = (Byte)(a >> 8);
-            this[_ColourOffset + 2] = (Byte)(b & 0xff);
-            this[_ColourOffset + 3] = (Byte)(b >> 8);
-
-            // write the indices
-            for (int i = 0; i < 4; ++i)
-            {
-                var ind = 4 * i;
-                this[_ColourOffset + 4 + i] = (Byte)(indices[ind + 0] | (indices[ind + 1] << 2) | (indices[ind + 2] << 4) | (indices[ind + 3] << 6));
-            }
-        }
-
-        private void WriteAlphaBlock(int alpha0, int alpha1, Byte[] indices)
-        {
-            // write the first two bytes
-            this[0] = (byte)alpha0;
-            this[1] = (byte)alpha1;
-
-            // pack the indices with 3 bits each
-            int destIdx = 2;
-            int indIdx = 0;
-
-            for (int i = 0; i < 2; ++i)
-            {
-                // pack 8 3-bit values
-                int value = 0;
-                for (int j = 0; j < 8; ++j)
-                {
-                    int index = indices[indIdx++];
-                    value |= (index << 3 * j);
-                }
-
-                // store in 3 bytes
-                for (int j = 0; j < 3; ++j)
-                {
-                    int val = (value >> 8 * j) & 0xff;
-
-                    this[destIdx++] = (Byte)val;
-                }
-            }
-        }
+        #region compress block writer
 
         public void WriteColourBlock3(Vec3 start, Vec3 end, Byte[] indices)
         {
@@ -144,6 +103,22 @@ namespace Epsylon.TextureSquish
             WriteColourBlock(a, b, remapped);
         }
 
+        private void WriteColourBlock(int a, int b, Byte[] indices)
+        {
+            // write the endpoints
+            this[_ColourOffset + 0] = (Byte)(a & 0xff);
+            this[_ColourOffset + 1] = (Byte)(a >> 8);
+            this[_ColourOffset + 2] = (Byte)(b & 0xff);
+            this[_ColourOffset + 3] = (Byte)(b >> 8);
+
+            // write the indices
+            for (int i = 0; i < 4; ++i)
+            {
+                var ind = 4 * i;
+                this[_ColourOffset + 4 + i] = (Byte)(indices[ind + 0] | (indices[ind + 1] << 2) | (indices[ind + 2] << 4) | (indices[ind + 3] << 6));
+            }
+        }
+
         private void WriteAlphaBlock5(int alpha0, int alpha1, Byte[] indices)
         {
             // check the relative values of the endpoints
@@ -196,6 +171,147 @@ namespace Epsylon.TextureSquish
             }
         }
 
+        private void WriteAlphaBlock(int alpha0, int alpha1, Byte[] indices)
+        {
+            // write the first two bytes
+            this[0] = (byte)alpha0;
+            this[1] = (byte)alpha1;
+
+            // pack the indices with 3 bits each
+            int destIdx = 2;
+            int indIdx = 0;
+
+            for (int i = 0; i < 2; ++i)
+            {
+                // pack 8 3-bit values
+                int value = 0;
+                for (int j = 0; j < 8; ++j)
+                {
+                    int index = indices[indIdx++];
+                    value |= (index << 3 * j);
+                }
+
+                // store in 3 bytes
+                for (int j = 0; j < 3; ++j)
+                {
+                    int val = (value >> 8 * j) & 0xff;
+
+                    this[destIdx++] = (Byte)val;
+                }
+            }
+        }
+
+        #endregion
+
+        #region compress
+
+        /// <summary>
+        /// Compresses a 4x4 block of pixels.
+        /// </summary>
+        /// <remarks>
+        /// The source pixels should be presented as a contiguous array of 16 rgba
+        /// values, with each component as 1 byte each. In memory this should be:
+        /// 
+        ///   { r1, g1, b1, a1, .... , r16, g16, b16, a16 }
+        /// 
+        /// The flags parameter should specify either kDxt1, kDxt3 or kDxt5 compression, 
+        /// however, DXT1 will be used by default if none is specified. When using DXT1 
+        /// compression, 8 bytes of storage are required for the compressed DXT block. 
+        /// DXT3 and DXT5 compression require 16 bytes of storage per block.
+        /// The flags parameter can also specify a preferred colour compressor and 
+        /// colour error metric to use when fitting the RGB components of the data. 
+        /// Possible colour compressors are: kColourClusterFit (the default), 
+        /// kColourRangeFit or kColourIterativeClusterFit. Possible colour error metrics 
+        /// are: kColourMetricPerceptual (the default) or kColourMetricUniform. If no 
+        /// flags are specified in any particular category then the default will be 
+        /// used. Unknown flags are ignored.
+        /// 
+        /// When using kColourClusterFit, an additional flag can be specified to
+        /// weight the colour of each pixel by its alpha value. For images that are
+        /// rendered using alpha blending, this can significantly increase the 
+        /// perceived quality.
+        /// 
+        /// </remarks>
+        /// <param name="rgba">The rgba values of the 16 source pixels.</param>        
+        /// <param name="flags">Compression flags.</param>
+        public void Compress(Byte[] rgba, CompressionOptions flags)
+        {
+            // compress with full mask
+            CompressMasked(rgba, 0xffff, flags);
+        }
+
+        /// <summary>
+        /// Compresses a 4x4 block of pixels.
+        /// </summary>
+        /// <remarks>
+        /// The source pixels should be presented as a contiguous array of 16 rgba
+        /// values, with each component as 1 byte each. In memory this should be:
+        /// 
+        ///     { r1, g1, b1, a1, .... , r16, g16, b16, a16 }
+        ///     
+        /// The mask parameter enables only certain pixels within the block. The lowest
+        /// bit enables the first pixel and so on up to the 16th bit. Bits beyond the
+        /// 16th bit are ignored. Pixels that are not enabled are allowed to take
+        /// arbitrary colours in the output block. An example of how this can be used
+        /// is in the CompressImage function to disable pixels outside the bounds of
+        /// the image when the width or height is not divisible by 4.
+        /// 
+        /// The flags parameter should specify either kDxt1, kDxt3 or kDxt5 compression, 
+        /// however, DXT1 will be used by default if none is specified. When using DXT1 
+        /// compression, 8 bytes of storage are required for the compressed DXT block. 
+        /// DXT3 and DXT5 compression require 16 bytes of storage per block.
+        /// 
+        /// The flags parameter can also specify a preferred colour compressor and 
+        /// colour error metric to use when fitting the RGB components of the data.
+        /// Possible colour compressors are: kColourClusterFit (the default), 
+        /// kColourRangeFit or kColourIterativeClusterFit. Possible colour error metrics 
+        /// are: kColourMetricPerceptual (the default) or kColourMetricUniform. If no 
+        /// flags are specified in any particular category then the default will be 
+        /// used. Unknown flags are ignored.
+        /// 
+        /// When using kColourClusterFit, an additional flag can be specified to
+        /// weight the colour of each pixel by its alpha value. For images that are
+        /// rendered using alpha blending, this can significantly increase the 
+        /// perceived quality.
+        /// </remarks>
+        /// <param name="rgba">The rgba values of the 16 source pixels.</param>
+        /// <param name="mask">The valid pixel mask.</param>
+        /// <param name="flags">Compression flags.</param>
+        public void CompressMasked(Byte[] rgba, int mask, CompressionOptions options)
+        {
+            System.Diagnostics.Debug.Assert(rgba != null && rgba.Length == 64, nameof(rgba));
+
+            // fix any bad flags
+            options = options.FixFlags();
+
+            // create the minimal point set
+            var colours = new ColourSet(rgba, mask, _Mode, options);
+
+            // check the compression type and compress colour
+            if (colours.Count == 1)
+            {
+                // always do a single colour fit
+                var fit = new SingleColourFit(colours, options);
+                fit.Compress(this);
+            }
+            else if ((options & CompressionOptions.ColourRangeFit) != 0 || colours.Count == 0)
+            {
+                // do a range fit
+                var fit = new RangeFit(colours, options);
+                fit.Compress(this);
+            }
+            else
+            {
+                // default to a cluster fit (could be iterative or not)
+                var fit = new ClusterFit(colours, options);
+                fit.Compress(this);
+            }
+
+            // compress alpha separately if necessary
+            if ((_Mode & CompressionMode.Dxt3) != 0) this.CompressAlphaDxt3(rgba, mask);
+            else if ((_Mode & CompressionMode.Dxt5) != 0) this.CompressAlphaDxt5(rgba, mask);
+        }
+
         public void CompressAlphaDxt3(Byte[] rgba, int mask)
         {
             // quantise and pack the alpha values pairwise
@@ -218,72 +334,6 @@ namespace Epsylon.TextureSquish
                 // pack into the byte
                 this[i] = (Byte)(quant1 | (quant2 << 4));
             }
-        }
-
-        public void DecompressAlphaDxt3(Byte[] rgba)
-        {
-            // unpack the alpha values pairwise
-            for (int i = 0; i < 8; ++i)
-            {
-                // quantise down to 4 bits
-                int quant = this[i];
-
-                // unpack the values
-                int lo = (quant & 0x0f);
-                int hi = (quant & 0xf0);
-
-                // convert back up to bytes
-                rgba[8 * i + 3] = (Byte)(lo | (lo << 4));
-                rgba[8 * i + 7] = (Byte)(hi | (hi >> 4));
-            }
-        }
-
-        private static void FixRange(ref int min, ref int max, int steps)
-        {
-            if (max - min < steps) max = Math.Min(min + steps, 255);
-            if (max - min < steps) min = Math.Max(0, max - steps);
-        }
-
-        private static int FitCodes(Byte[] rgba, int mask, byte[] codes, byte[] indices)
-        {
-            // fit each alpha value to the codebook
-            int err = 0;
-            for (int i = 0; i < 16; ++i)
-            {
-                // check this pixel is valid
-                int bit = 1 << i;
-                if ((mask & bit) == 0)
-                {
-                    // use the first code
-                    indices[i] = 0;
-                    continue;
-                }
-
-                // find the least error and corresponding index
-                int value = rgba[4 * i + 3];
-                int least = int.MaxValue;
-                int index = 0;
-                for (int j = 0; j < 8; ++j)
-                {
-                    // get the squared error from this code
-                    int dist = (int)value - (int)codes[j];
-                    dist *= dist;
-
-                    // compare with the best so far
-                    if (dist < least)
-                    {
-                        least = dist;
-                        index = j;
-                    }
-                }
-
-                // save this index and accumulate the error
-                indices[i] = (Byte)index;
-                err += least;
-            }
-
-            // return the total error
-            return err;
         }
 
         public void CompressAlphaDxt5(Byte[] rgba, int mask)
@@ -343,7 +393,174 @@ namespace Epsylon.TextureSquish
             else this.WriteAlphaBlock7(min7, max7, indices7);
         }
 
-        public void DecompressAlphaDxt5(Byte[] rgba)
+        private static void FixRange(ref int min, ref int max, int steps)
+        {
+            if (max - min < steps) max = Math.Min(min + steps, 255);
+            if (max - min < steps) min = Math.Max(0, max - steps);
+        }
+
+        private static int FitCodes(Byte[] rgba, int mask, byte[] codes, byte[] indices)
+        {
+            // fit each alpha value to the codebook
+            int err = 0;
+            for (int i = 0; i < 16; ++i)
+            {
+                // check this pixel is valid
+                int bit = 1 << i;
+                if ((mask & bit) == 0)
+                {
+                    // use the first code
+                    indices[i] = 0;
+                    continue;
+                }
+
+                // find the least error and corresponding index
+                int value = rgba[4 * i + 3];
+                int least = int.MaxValue;
+                int index = 0;
+                for (int j = 0; j < 8; ++j)
+                {
+                    // get the squared error from this code
+                    int dist = (int)value - (int)codes[j];
+                    dist *= dist;
+
+                    // compare with the best so far
+                    if (dist < least)
+                    {
+                        least = dist;
+                        index = j;
+                    }
+                }
+
+                // save this index and accumulate the error
+                indices[i] = (Byte)index;
+                err += least;
+            }
+
+            // return the total error
+            return err;
+        }
+        
+        #endregion
+
+        #region decompress
+
+        /// <summary>
+        /// Decompresses a 4x4 block of pixels.
+        /// </summary>
+        /// <remarks>
+        /// The decompressed pixels will be written as a contiguous array of 16 rgba
+        /// values, with each component as 1 byte each. In memory this is:
+        /// 
+        ///     { r1, g1, b1, a1, .... , r16, g16, b16, a16 }
+        ///     
+        /// The flags parameter should specify either kDxt1, kDxt3 or kDxt5 compression, 
+        /// however, DXT1 will be used by default if none is specified. All other flags
+        /// are ignored.
+        /// </remarks>
+        /// <param name="rgba">Storage for the 16 decompressed pixels.</param>        
+        public void Decompress(Byte[] rgba)
+        {
+            System.Diagnostics.Debug.Assert(rgba != null && rgba.Length == 64, nameof(rgba));            
+
+            // decompress colour
+            this.DecompressColour(rgba, (_Mode & CompressionMode.Dxt1) != 0);
+
+            // decompress alpha separately if necessary
+            if ((_Mode & CompressionMode.Dxt3) != 0) this.DecompressAlphaDxt3(rgba);
+            else if ((_Mode & CompressionMode.Dxt5) != 0) this.DecompressAlphaDxt5(rgba);
+        }
+
+        private void DecompressColour(byte[] rgba, bool isDxt1)
+        {
+            // unpack the endpoints
+            var codes = new Byte[16];
+            int a = Unpack565(_Array, Offset + _ColourOffset + 0, codes, 0);
+            int b = Unpack565(_Array, Offset + _ColourOffset + 2, codes, 4);
+
+            // generate the midpoints
+            for (int i = 0; i < 3; ++i)
+            {
+                int c = codes[i];
+                int d = codes[4 + i];
+
+                if (isDxt1 && a <= b)
+                {
+                    codes[8 + i] = (Byte)((c + d) / 2);
+                    codes[12 + i] = 0;
+                }
+                else
+                {
+                    codes[8 + i] = (Byte)((2 * c + d) / 3);
+                    codes[12 + i] = (Byte)((c + 2 * d) / 3);
+                }
+            }
+
+            // fill in alpha for the intermediate values
+            codes[8 + 3] = 255;
+            codes[12 + 3] = (Byte)((isDxt1 && a <= b) ? 0 : 255);
+
+            // unpack the indices
+            var indices = new Byte[16];
+            for (int i = 0; i < 4; ++i)
+            {
+                int ind = 4 * i;
+                var packed = _Array[Offset + _ColourOffset + 4 + i];
+
+                indices[ind + 0] = (Byte)(packed & 0x3);
+                indices[ind + 1] = (Byte)((packed >> 2) & 0x3);
+                indices[ind + 2] = (Byte)((packed >> 4) & 0x3);
+                indices[ind + 3] = (Byte)((packed >> 6) & 0x3);
+            }
+
+            // store out the colours
+            for (int i = 0; i < 16; ++i)
+            {
+                var offset = 4 * indices[i];
+                for (int j = 0; j < 4; ++j)
+                    rgba[4 * i + j] = codes[offset + j];
+            }
+        }
+
+        private static int Unpack565(byte[] packed, int packedOffset, byte[] colour, int colourOffset)
+        {
+            // build the packed value
+            int value = (int)packed[packedOffset + 0] | ((int)packed[packedOffset + 1] << 8);
+
+            // get the components in the stored range
+            int red = (Byte)((value >> 11) & 0x1f);
+            int green = (Byte)((value >> 5) & 0x3f);
+            int blue = (Byte)(value & 0x1f);
+
+            // scale up to 8 bits
+            colour[colourOffset + 0] = (Byte)((red << 3) | (red >> 2));
+            colour[colourOffset + 1] = (Byte)((green << 2) | (green >> 4));
+            colour[colourOffset + 2] = (Byte)((blue << 3) | (blue >> 2));
+            colour[colourOffset + 3] = 255;
+
+            // return the value
+            return value;
+        }
+
+        private void DecompressAlphaDxt3(Byte[] rgba)
+        {
+            // unpack the alpha values pairwise
+            for (int i = 0; i < 8; ++i)
+            {
+                // quantise down to 4 bits
+                int quant = this[i];
+
+                // unpack the values
+                int lo = (quant & 0x0f);
+                int hi = (quant & 0xf0);
+
+                // convert back up to bytes
+                rgba[8 * i + 3] = (Byte)(lo | (lo << 4));
+                rgba[8 * i + 7] = (Byte)(hi | (hi >> 4));
+            }
+        }
+
+        private void DecompressAlphaDxt5(Byte[] rgba)
         {
             // get the two alpha values
 
@@ -397,213 +614,7 @@ namespace Epsylon.TextureSquish
                 rgba[4 * i + 3] = codes[indices[i]];
         }
 
-        public void DecompressColour(byte[] rgba, bool isDxt1)
-        {
-            // unpack the endpoints
-            var codes = new Byte[16];
-            int a = Unpack565(_Array, Offset + _ColourOffset + 0, codes, 0);
-            int b = Unpack565(_Array, Offset + _ColourOffset + 2, codes, 4);
-
-            // generate the midpoints
-            for (int i = 0; i < 3; ++i)
-            {
-                int c = codes[i];
-                int d = codes[4 + i];
-
-                if (isDxt1 && a <= b)
-                {
-                    codes[8 + i] = (Byte)((c + d) / 2);
-                    codes[12 + i] = 0;
-                }
-                else
-                {
-                    codes[8 + i] = (Byte)((2 * c + d) / 3);
-                    codes[12 + i] = (Byte)((c + 2 * d) / 3);
-                }
-            }
-
-            // fill in alpha for the intermediate values
-            codes[8 + 3] = 255;
-            codes[12 + 3] = (Byte)((isDxt1 && a <= b) ? 0 : 255);
-
-            // unpack the indices
-            var indices = new Byte[16];
-            for (int i = 0; i < 4; ++i)
-            {
-                int ind = 4 * i;
-                var packed = _Array[Offset+_ColourOffset+ 4 + i];
-
-                indices[ind + 0] = (Byte)(packed & 0x3);
-                indices[ind + 1] = (Byte)((packed >> 2) & 0x3);
-                indices[ind + 2] = (Byte)((packed >> 4) & 0x3);
-                indices[ind + 3] = (Byte)((packed >> 6) & 0x3);
-            }
-
-            // store out the colours
-            for (int i = 0; i < 16; ++i)
-            {
-                var offset = 4 * indices[i];
-                for (int j = 0; j < 4; ++j)
-                    rgba[4 * i + j] = codes[offset + j];
-            }
-        }
-
-        private static int Unpack565(byte[] packed, int packedOffset, byte[] colour, int colourOffset)
-        {
-            // build the packed value
-            int value = (int)packed[packedOffset + 0] | ((int)packed[packedOffset + 1] << 8);
-
-            // get the components in the stored range
-            int red = (Byte)((value >> 11) & 0x1f);
-            int green = (Byte)((value >> 5) & 0x3f);
-            int blue = (Byte)(value & 0x1f);
-
-            // scale up to 8 bits
-            colour[colourOffset + 0] = (Byte)((red << 3) | (red >> 2));
-            colour[colourOffset + 1] = (Byte)((green << 2) | (green >> 4));
-            colour[colourOffset + 2] = (Byte)((blue << 3) | (blue >> 2));
-            colour[colourOffset + 3] = 255;
-
-            // return the value
-            return value;
-        }
-
-        /// <summary>
-        /// Compresses a 4x4 block of pixels.
-        /// </summary>
-        /// <remarks>
-        /// The source pixels should be presented as a contiguous array of 16 rgba
-        /// values, with each component as 1 byte each. In memory this should be:
-        /// 
-        ///   { r1, g1, b1, a1, .... , r16, g16, b16, a16 }
-        /// 
-        /// The flags parameter should specify either kDxt1, kDxt3 or kDxt5 compression, 
-        /// however, DXT1 will be used by default if none is specified. When using DXT1 
-        /// compression, 8 bytes of storage are required for the compressed DXT block. 
-        /// DXT3 and DXT5 compression require 16 bytes of storage per block.
-        /// The flags parameter can also specify a preferred colour compressor and 
-        /// colour error metric to use when fitting the RGB components of the data. 
-        /// Possible colour compressors are: kColourClusterFit (the default), 
-        /// kColourRangeFit or kColourIterativeClusterFit. Possible colour error metrics 
-        /// are: kColourMetricPerceptual (the default) or kColourMetricUniform. If no 
-        /// flags are specified in any particular category then the default will be 
-        /// used. Unknown flags are ignored.
-        /// 
-        /// When using kColourClusterFit, an additional flag can be specified to
-        /// weight the colour of each pixel by its alpha value. For images that are
-        /// rendered using alpha blending, this can significantly increase the 
-        /// perceived quality.
-        /// 
-        /// </remarks>
-        /// <param name="rgba">The rgba values of the 16 source pixels.</param>        
-        /// <param name="flags">Compression flags.</param>
-        public void Compress(Byte[] rgba, CompressionMode flags)
-        {
-            // compress with full mask
-            CompressMasked(rgba, 0xffff, flags);
-        }
-        
-        /// <summary>
-        /// Compresses a 4x4 block of pixels.
-        /// </summary>
-        /// <remarks>
-        /// The source pixels should be presented as a contiguous array of 16 rgba
-        /// values, with each component as 1 byte each. In memory this should be:
-        /// 
-        ///     { r1, g1, b1, a1, .... , r16, g16, b16, a16 }
-        ///     
-        /// The mask parameter enables only certain pixels within the block. The lowest
-        /// bit enables the first pixel and so on up to the 16th bit. Bits beyond the
-        /// 16th bit are ignored. Pixels that are not enabled are allowed to take
-        /// arbitrary colours in the output block. An example of how this can be used
-        /// is in the CompressImage function to disable pixels outside the bounds of
-        /// the image when the width or height is not divisible by 4.
-        /// 
-        /// The flags parameter should specify either kDxt1, kDxt3 or kDxt5 compression, 
-        /// however, DXT1 will be used by default if none is specified. When using DXT1 
-        /// compression, 8 bytes of storage are required for the compressed DXT block. 
-        /// DXT3 and DXT5 compression require 16 bytes of storage per block.
-        /// 
-        /// The flags parameter can also specify a preferred colour compressor and 
-        /// colour error metric to use when fitting the RGB components of the data.
-        /// Possible colour compressors are: kColourClusterFit (the default), 
-        /// kColourRangeFit or kColourIterativeClusterFit. Possible colour error metrics 
-        /// are: kColourMetricPerceptual (the default) or kColourMetricUniform. If no 
-        /// flags are specified in any particular category then the default will be 
-        /// used. Unknown flags are ignored.
-        /// 
-        /// When using kColourClusterFit, an additional flag can be specified to
-        /// weight the colour of each pixel by its alpha value. For images that are
-        /// rendered using alpha blending, this can significantly increase the 
-        /// perceived quality.
-        /// </remarks>
-        /// <param name="rgba">The rgba values of the 16 source pixels.</param>
-        /// <param name="mask">The valid pixel mask.</param>
-        /// <param name="flags">Compression flags.</param>
-        public void CompressMasked(Byte[] rgba, int mask, CompressionMode flags)
-        {
-            System.Diagnostics.Debug.Assert(rgba != null && rgba.Length == 64, nameof(rgba));
-
-            // fix any bad flags
-            flags = flags.FixFlags();
-
-            // create the minimal point set
-            var colours = new ColourSet(rgba, mask, flags);
-
-            // check the compression type and compress colour
-            if (colours.Count == 1)
-            {
-                // always do a single colour fit
-                var fit = new SingleColourFit(colours, flags);
-                fit.Compress(this);
-            }
-            else if ((flags & CompressionMode.ColourRangeFit) != 0 || colours.Count == 0)
-            {
-                // do a range fit
-                var fit = new RangeFit(colours, flags);
-                fit.Compress(this);
-            }
-            else
-            {
-                // default to a cluster fit (could be iterative or not)
-                var fit = new ClusterFit(colours, flags);
-                fit.Compress(this);
-            }
-
-            // compress alpha separately if necessary
-            if ((flags & CompressionMode.Dxt3) != 0) this.CompressAlphaDxt3(rgba, mask);
-            else if ((flags & CompressionMode.Dxt5) != 0) this.CompressAlphaDxt5(rgba, mask);
-        }
-
-        /// <summary>
-        /// Decompresses a 4x4 block of pixels.
-        /// </summary>
-        /// <remarks>
-        /// The decompressed pixels will be written as a contiguous array of 16 rgba
-        /// values, with each component as 1 byte each. In memory this is:
-        /// 
-        ///     { r1, g1, b1, a1, .... , r16, g16, b16, a16 }
-        ///     
-        /// The flags parameter should specify either kDxt1, kDxt3 or kDxt5 compression, 
-        /// however, DXT1 will be used by default if none is specified. All other flags
-        /// are ignored.
-        /// </remarks>
-        /// <param name="rgba">Storage for the 16 decompressed pixels.</param>
-        /// <param name="flags">Compression flags.</param>
-        public void Decompress(Byte[] rgba, CompressionMode flags)
-        {
-            System.Diagnostics.Debug.Assert(rgba != null && rgba.Length == 64, nameof(rgba));
-
-            // fix any bad flags
-            flags = flags.FixFlags();
-
-            // decompress colour
-            this.DecompressColour(rgba, (flags & CompressionMode.Dxt1) != 0);
-
-            // decompress alpha separately if necessary
-            if ((flags & CompressionMode.Dxt3) != 0) this.DecompressAlphaDxt3(rgba);
-            else if ((flags & CompressionMode.Dxt5) != 0) this.DecompressAlphaDxt5(rgba);
-        }
+        #endregion        
     }
 
     

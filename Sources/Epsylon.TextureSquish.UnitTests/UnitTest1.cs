@@ -47,7 +47,7 @@ namespace Epsylon.TextureSquish.UnitTests
             watch.Restart();
             for(int i=0; i < 100; ++i)
             {
-                toSquish.Compress(CompressionMode.Dxt5 | CompressionMode.ColourIterativeClusterFit | CompressionMode.UseParallelProcessing);
+                toSquish.Compress(CompressionMode.Dxt5 , CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing);
             }
             watch.Stop();
             var netTime = watch.Elapsed;

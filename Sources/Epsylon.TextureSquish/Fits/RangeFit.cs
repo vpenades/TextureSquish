@@ -6,10 +6,10 @@ namespace Epsylon.TextureSquish
 {
     class RangeFit : ColourFit
     {
-        public RangeFit(ColourSet colours, CompressionMode flags) : base(colours, flags)
+        public RangeFit(ColourSet colours, CompressionOptions flags) : base(colours, flags)
         {
             // initialise the metric
-            bool perceptual = ((m_flags & CompressionMode.ColourMetricPerceptual) != 0);
+            bool perceptual = ((m_flags & CompressionOptions.ColourMetricPerceptual) != 0);
             
             m_metric = perceptual ? new Vec3(0.2126f, 0.7152f, 0.0722f) : Vec3.One;
 

@@ -18,16 +18,16 @@ namespace Epsylon.TextureSquish
         private static readonly Vec4 TWOTHIRDS_TWOTHIRDS2 = new Vec4(2.0f / 3.0f, 2.0f / 3.0f, 2.0f / 3.0f, 4.0f / 9.0f);
         private static readonly Vec4 TWONINETHS = new Vec4(2.0f / 9.0f);
 
-        public ClusterFit(ColourSet colours, CompressionMode flags) : base(colours, flags)
+        public ClusterFit(ColourSet colours, CompressionOptions flags) : base(colours, flags)
         {
             // set the iteration count
-            m_iterationCount = (m_flags & CompressionMode.ColourIterativeClusterFit) != 0 ? MAXITERATIONS : 1;
+            m_iterationCount = (m_flags & CompressionOptions.ColourIterativeClusterFit) != 0 ? MAXITERATIONS : 1;
 
             // initialise the best error
             m_besterror = new Vec4(float.MaxValue);
 
             // initialise the metric
-            bool perceptual = ((m_flags & CompressionMode.ColourMetricPerceptual) != 0);
+            bool perceptual = ((m_flags & CompressionOptions.ColourMetricPerceptual) != 0);
             
             m_metric = perceptual ? new Vec4(0.2126f, 0.7152f, 0.0722f, 0.0f) : Vec4.One;
 

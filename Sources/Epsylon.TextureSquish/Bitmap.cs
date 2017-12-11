@@ -191,11 +191,11 @@ namespace Epsylon.TextureSquish
         /// <param name="height">The height of the image.</param>
         /// <param name="blocks">The compressed DXT blocks.</param>
         /// <param name="flags">Compression flags.</param>
-        public static Bitmap Decompress(int width, int height, Byte[] blocks, CompressionMode flags)
+        public static Bitmap Decompress(int width, int height, Byte[] blocks, CompressionMode mode)
         {
             var img = new Bitmap(new Byte[width * height * 4], width, height);
 
-            DecompressImage(img, blocks, flags);
+            DecompressImage(img, blocks, mode);
 
             return img;
         }
@@ -234,29 +234,29 @@ namespace Epsylon.TextureSquish
         /// much memory is required in the compressed image, use
         /// squish::GetStorageRequirements.
         /// </remarks>
-        public Byte[] Compress(CompressionMode flags)
+        public Byte[] Compress(CompressionMode mode, CompressionOptions options)
         {
-            var l = GetStorageRequirements(_Width, _Height, flags);
+            var l = GetStorageRequirements(_Width, _Height, mode);
 
             var blocks = new Byte[l];
 
-            CompressImage(this, blocks, flags);
+            CompressImage(this, blocks, mode,options);
 
             return blocks;
         }        
         
-        private static void CompressImage(Bitmap srcImage, Byte[] blocks, CompressionMode flags)
+        private static void CompressImage(Bitmap srcImage, Byte[] blocks, CompressionMode mode, CompressionOptions options)
         {
             // fix any bad flags
-            flags = flags.FixFlags();
+            options = options.FixFlags();
 
             int block_width = (srcImage.Width + 3) / 4;
             int block_height = (srcImage.Height + 3) / 4;
 
             // if the number of chunks to process is not very large, we better skip parallel processing
-            if (block_width * block_height < 16) flags &= ~CompressionMode.UseParallelProcessing;
+            if (block_width * block_height < 16) options &= ~CompressionOptions.UseParallelProcessing;
 
-            if ((flags & CompressionMode.UseParallelProcessing) != 0)
+            if ((options & CompressionOptions.UseParallelProcessing) != 0)
             {
                 System.Threading.Tasks.Parallel.For
                     (
@@ -265,7 +265,7 @@ namespace Epsylon.TextureSquish
                     (y,state) =>
                         {
                             // initialise the block output
-                            var block = new BlockWindow(blocks, flags);
+                            var block = new BlockWindow(blocks, mode);
 
                             block.Offset += block.ByteLength * y * block_width;
 
@@ -277,7 +277,7 @@ namespace Epsylon.TextureSquish
                                 srcImage.CopyBlockTo(x*4, y*4, sourceRgba, out int mask);
 
                                 // compress it into the output
-                                block.CompressMasked(sourceRgba, mask, flags);
+                                block.CompressMasked(sourceRgba, mask, options);
 
                                 // advance
                                 block.Offset += block.ByteLength;
@@ -288,7 +288,7 @@ namespace Epsylon.TextureSquish
             else
             {
                 // initialise the block output
-                var block = new BlockWindow(blocks, flags);
+                var block = new BlockWindow(blocks, mode);
 
                 // build the 4x4 block of pixels
                 var sourceRgba = new Byte[16 * 4];
@@ -301,7 +301,7 @@ namespace Epsylon.TextureSquish
                         srcImage.CopyBlockTo(x*4, y*4, sourceRgba, out int mask);
 
                         // compress it into the output
-                        block.CompressMasked(sourceRgba, mask, flags);
+                        block.CompressMasked(sourceRgba, mask, options);
 
                         // advance
                         block.Offset += block.ByteLength;
@@ -310,13 +310,10 @@ namespace Epsylon.TextureSquish
             }            
         }               
         
-        private static void DecompressImage(Bitmap dstImage, Byte[] blocks, CompressionMode flags)
+        private static void DecompressImage(Bitmap dstImage, Byte[] blocks, CompressionMode mode)
         {
-            // fix any bad flags
-            flags = flags.FixFlags();
-
             // initialise the block input
-            var block = new BlockWindow(blocks, flags);
+            var block = new BlockWindow(blocks, mode);
 
             var targetRgba = new Byte[4 * 16];
 
@@ -326,7 +323,7 @@ namespace Epsylon.TextureSquish
                 for (int x = 0; x < dstImage.Width; x += 4)
                 {
                     // decompress the block
-                    block.Decompress(targetRgba, flags);
+                    block.Decompress(targetRgba);
 
                     // write the decompressed pixels to the correct image locations
                     dstImage.SetBlock(x, y, targetRgba);
@@ -355,9 +352,6 @@ namespace Epsylon.TextureSquish
         /// </remarks>
         static int GetStorageRequirements(int width, int height, CompressionMode flags)
         {
-            // fix any bad flags
-            flags = flags.FixFlags();
-
             // compute the storage requirements
             int blockcount = ((width + 3) / 4) * ((height + 3) / 4);
             int blocksize = ((flags & CompressionMode.Dxt1) != 0) ? 8 : 16;

@@ -8,27 +8,39 @@ namespace Epsylon.TextureSquish
 {
     class SingleColourFit : ColourFit
     {
+        private static readonly SingleColourLookup[][] LOOKUPTABLES3 =
+            new SingleColourLookup[][]
+            {
+                SingleColourLookupTables.lookup_5_3,
+                SingleColourLookupTables.lookup_6_3,
+                SingleColourLookupTables.lookup_5_3
+            };
 
-        public SingleColourFit(ColourSet colours, CompressionMode flags) : base(colours, flags)
+        // build the table of lookups
+        private static readonly SingleColourLookup[][] LOOKUPTABLES4 =
+            new SingleColourLookup[][]
+            {
+                SingleColourLookupTables.lookup_5_4,
+                SingleColourLookupTables.lookup_6_4,
+                SingleColourLookupTables.lookup_5_4
+            };
+
+        public SingleColourFit(ColourSet colours, CompressionOptions flags) : base(colours, flags)
         {
             // grab the single colour
             var values = m_colours.Points;
-            m_colour[0] = (Byte)(255.0f * values[0].X).FloatToInt(255);
-            m_colour[1] = (Byte)(255.0f * values[0].Y).FloatToInt(255);
-            m_colour[2] = (Byte)(255.0f * values[0].Z).FloatToInt(255);
+            m_colour[0] = (Byte)((255.0f * values[0].X).FloatToInt(255));
+            m_colour[1] = (Byte)((255.0f * values[0].Y).FloatToInt(255));
+            m_colour[2] = (Byte)((255.0f * values[0].Z).FloatToInt(255));
 
             // initialise the best error
             m_besterror = int.MaxValue;
         }
 
-
         protected override void Compress3(BlockWindow block)
         {
-            // build the table of lookups
-            var lookups = new SingleColourLookup[][] { SingleColourLookupTables.lookup_5_3, SingleColourLookupTables.lookup_6_3, SingleColourLookupTables.lookup_5_3 };
-
             // find the best end-points and index
-            ComputeEndPoints(lookups);
+            ComputeEndPoints(LOOKUPTABLES3);
 
             // build the block if we win
             if (m_error < m_besterror)
@@ -47,11 +59,8 @@ namespace Epsylon.TextureSquish
 
         protected override void Compress4(BlockWindow block)
         {
-            // build the table of lookups
-            var lookups = new SingleColourLookup[][] { SingleColourLookupTables.lookup_5_4, SingleColourLookupTables.lookup_6_4, SingleColourLookupTables.lookup_5_4 };
-
             // find the best end-points and index
-            ComputeEndPoints(lookups);
+            ComputeEndPoints(LOOKUPTABLES4);
 
             // build the block if we win
             if (m_error < m_besterror)
@@ -103,7 +112,7 @@ namespace Epsylon.TextureSquish
                         (float)sources[0].end / 31.0f,
                         (float)sources[1].end / 63.0f,
                         (float)sources[2].end / 31.0f
-                            );
+                    );
                     m_index = (Byte)(2 * index);
                     m_error = error;
                 }
