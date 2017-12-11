@@ -4,10 +4,9 @@ namespace Epsylon.TextureSquish
 {
     abstract class ColourFit
     {
-        public ColourFit(ColourSet colours, CompressionOptions flags)
+        public ColourFit(ColourSet colours)
         {
-            m_colours = colours;
-            m_flags = flags;
+            m_colours = colours;            
         }
 
         public void Compress(BlockWindow block)
@@ -23,8 +22,7 @@ namespace Epsylon.TextureSquish
         protected abstract void Compress3(BlockWindow block);
         protected abstract void Compress4(BlockWindow block);
 
-        protected ColourSet m_colours;
-        protected CompressionOptions m_flags;
+        protected ColourSet m_colours;        
     }
 
 }

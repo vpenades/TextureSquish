@@ -18,16 +18,16 @@ namespace Epsylon.TextureSquish
         private static readonly Vec4 TWOTHIRDS_TWOTHIRDS2 = new Vec4(2.0f / 3.0f, 2.0f / 3.0f, 2.0f / 3.0f, 4.0f / 9.0f);
         private static readonly Vec4 TWONINETHS = new Vec4(2.0f / 9.0f);
 
-        public ClusterFit(ColourSet colours, CompressionOptions flags) : base(colours, flags)
+        public ClusterFit(ColourSet colours, CompressionOptions flags) : base(colours)
         {
             // set the iteration count
-            m_iterationCount = (m_flags & CompressionOptions.ColourIterativeClusterFit) != 0 ? MAXITERATIONS : 1;
+            m_iterationCount = (flags & CompressionOptions.ColourIterativeClusterFit) != 0 ? MAXITERATIONS : 1;
 
             // initialise the best error
             m_besterror = new Vec4(float.MaxValue);
 
             // initialise the metric
-            bool perceptual = ((m_flags & CompressionOptions.ColourMetricPerceptual) != 0);
+            bool perceptual = ((flags & CompressionOptions.ColourMetricPerceptual) != 0);
             
             m_metric = perceptual ? new Vec4(0.2126f, 0.7152f, 0.0722f, 0.0f) : Vec4.One;
 
@@ -346,12 +346,13 @@ namespace Epsylon.TextureSquish
             }
         }        
 
-        private int m_iterationCount;
-        private Vec3 m_principle;
+        private readonly int m_iterationCount;
+        private readonly Vec3 m_principle;
         private readonly Byte[] m_order = new Byte[16 * MAXITERATIONS];
         private readonly Vec4[] m_points_weights = new Vec4[16];
-        private Vec4 m_xsum_wsum;
-        private Vec4 m_metric;
+        private readonly Vec4 m_metric;
+
+        private Vec4 m_xsum_wsum;        
         private Vec4 m_besterror;
     }
 }

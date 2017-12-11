@@ -25,7 +25,7 @@ namespace Epsylon.TextureSquish
                 SingleColourLookupTables.lookup_5_4
             };
 
-        public SingleColourFit(ColourSet colours, CompressionOptions flags) : base(colours, flags)
+        public SingleColourFit(ColourSet colours, CompressionOptions flags) : base(colours)
         {
             // grab the single colour
             var values = m_colours.Points;
