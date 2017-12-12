@@ -48,11 +48,9 @@ namespace Epsylon.TextureSquish.UnitTests
 
             var blocks = srcBitmap.Compress(mode,options);
 
-            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);
+            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);            
 
-            var stats = dstBitmap.CompareRGBToOriginal(srcBitmap);
-
-            context.WriteLine(stats.ToString());
+            context.WriteLine(dstBitmap.CompareRGBToOriginal(srcBitmap).ToString());
             
             return dstBitmap.ToImageSharp();
         }
@@ -61,34 +59,41 @@ namespace Epsylon.TextureSquish.UnitTests
         {
             var srcImg = SixLabors.ImageSharp.Image.Load(filePath);
 
-            srcImg.SquishImageWithNvidia(CompressionMode.Dxt1).Save(System.IO.Path.ChangeExtension(filePath, "Dx1-Nvidia.png"));
-            srcImg.SquishImageWithNvidia(CompressionMode.Dxt3).Save(System.IO.Path.ChangeExtension(filePath, "Dx3-Nvidia.png"));
-            srcImg.SquishImageWithNvidia(CompressionMode.Dxt5).Save(System.IO.Path.ChangeExtension(filePath, "Dx5-Nvidia.png"));
+            void processNVidia(CompressionMode mode, string ext)
+            {
+                var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
+                context.WriteLine($"{dstFileName} with {mode}");
+                srcImg.SquishImageWithNvidia(mode, context).Save(dstFileName);
+            }
 
-            void process(CompressionMode mode,CompressionOptions options, string ext)
+            void processSquish(CompressionMode mode, CompressionOptions options, string ext)
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
                 context.WriteLine($"{dstFileName} with {mode}");
                 srcImg.SquishImage(mode, options, context).Save(dstFileName);
-            }
+            }            
 
-            var flags = CompressionOptions.ColourRangeFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;            
+            processNVidia(CompressionMode.Dxt1, "Dx1-NVidia.png");
+            processNVidia(CompressionMode.Dxt3, "Dx3-NVidia.png");
+            processNVidia(CompressionMode.Dxt5, "Dx5-NVidia.png");
 
-            process(CompressionMode.Dxt1 , flags, "Dx1-RangeFit.png");
-            process(CompressionMode.Dxt3 , flags, "Dx3-RangeFit.png");
-            process(CompressionMode.Dxt5 , flags, "Dx5-RangeFit.png");
+            var flags = CompressionOptions.ColourRangeFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
+
+            processSquish(CompressionMode.Dxt1 , flags, "Dx1-RangeFit.png");
+            processSquish(CompressionMode.Dxt3 , flags, "Dx3-RangeFit.png");
+            processSquish(CompressionMode.Dxt5 , flags, "Dx5-RangeFit.png");
 
             flags = CompressionOptions.ColourClusterFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
 
-            process(CompressionMode.Dxt1 , flags, "Dx1-ClusterFit.png");
-            process(CompressionMode.Dxt3 , flags, "Dx3-ClusterFit.png");
-            process(CompressionMode.Dxt5 , flags, "Dx5-ClusterFit.png");
+            processSquish(CompressionMode.Dxt1 , flags, "Dx1-ClusterFit.png");
+            processSquish(CompressionMode.Dxt3 , flags, "Dx3-ClusterFit.png");
+            processSquish(CompressionMode.Dxt5 , flags, "Dx5-ClusterFit.png");
 
             flags = CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
 
-            process(CompressionMode.Dxt1 , flags, "Dx1-IterClusterFit.png");
-            process(CompressionMode.Dxt3 , flags, "Dx3-IterClusterFit.png");
-            process(CompressionMode.Dxt5 , flags, "Dx5-IterClusterFit.png");
+            processSquish(CompressionMode.Dxt1 , flags, "Dx1-IterClusterFit.png");
+            processSquish(CompressionMode.Dxt3 , flags, "Dx3-IterClusterFit.png");
+            processSquish(CompressionMode.Dxt5 , flags, "Dx5-IterClusterFit.png");
         }        
     }
 

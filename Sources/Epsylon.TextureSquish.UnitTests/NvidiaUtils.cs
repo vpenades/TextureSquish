@@ -23,21 +23,21 @@ namespace Epsylon.TextureSquish.UnitTests
             }
         }
 
-        public static Byte[] CompressWithNvidia(this Bitmap srcImage, CompressionMode flags)
+        public static Byte[] CompressWithNvidia(this Bitmap srcImage, CompressionMode mode)
         {
             Assert.AreEqual(8, IntPtr.Size, "nvtt.dll(x64) requires x64 runtime");
 
             var dxtCompressor = new Nvidia.TextureTools.Compressor();
             var inputOptions = new Nvidia.TextureTools.InputOptions();
-            if ((flags & CompressionMode.Dxt1) == 0) inputOptions.SetAlphaMode(Nvidia.TextureTools.AlphaMode.Premultiplied);
+            if ((mode & CompressionMode.Dxt1) == 0) inputOptions.SetAlphaMode(Nvidia.TextureTools.AlphaMode.Premultiplied);
             else inputOptions.SetAlphaMode(Nvidia.TextureTools.AlphaMode.None);
 
             inputOptions.SetTextureLayout(Nvidia.TextureTools.TextureType.Texture2D, srcImage.Width, srcImage.Height, 1);
 
             Nvidia.TextureTools.Format outputFormat = Nvidia.TextureTools.Format.DXT1;
 
-            if ((flags & CompressionMode.Dxt3) != 0) outputFormat = Nvidia.TextureTools.Format.DXT3;
-            if ((flags & CompressionMode.Dxt5) != 0) outputFormat = Nvidia.TextureTools.Format.DXT5;
+            if ((mode & CompressionMode.Dxt3) != 0) outputFormat = Nvidia.TextureTools.Format.DXT3;
+            if ((mode & CompressionMode.Dxt5) != 0) outputFormat = Nvidia.TextureTools.Format.DXT5;
 
             srcImage = srcImage.Clone();
 
@@ -73,11 +73,17 @@ namespace Epsylon.TextureSquish.UnitTests
             }
         }
 
-        public static IMAGE SquishImageWithNvidia(this IMAGE srcImage, CompressionMode flags)
+        public static IMAGE SquishImageWithNvidia(this IMAGE srcImage, CompressionMode mode, TestContext context)
         {
-            var blocks = srcImage.ToSquishImage().CompressWithNvidia(flags);
+            var srcBitmap = srcImage.ToSquishImage();
 
-            return Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, flags).ToImageSharp();
+            var blocks = srcBitmap.CompressWithNvidia(mode);
+
+            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);
+
+            context.WriteLine(dstBitmap.CompareRGBToOriginal(srcBitmap).ToString());
+
+            return dstBitmap.ToImageSharp();
         }
     }
 
