@@ -6,12 +6,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using SixLabors.ImageSharp;
 
-using Vec3 = System.Numerics.Vector3;
-using Vec4 = System.Numerics.Vector4;
-
 namespace Epsylon.TextureSquish.UnitTests
-{
-    
+{    
     using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.Rgba32>;
 
     static class SquishUtils
@@ -29,48 +25,7 @@ namespace Epsylon.TextureSquish.UnitTests
             }
 
             return dst;
-        }
-
-        public static Vec3 GetVec3(this Vec4 v) { return new Vec3(v.X, v.Y, v.Z); }
-
-        public static Vec4 GetVec4(this Byte[] array, int startIndex)
-        {
-            var x = array[startIndex + 0];
-            var y = array[startIndex + 1];
-            var z = array[startIndex + 2];
-            var w = array[startIndex + 3];
-
-            return new Vec4((float)x / 255.0f, (float)y / 255.0f, (float)z / 255.0f, (float)w / 255.0f);
-        }
-
-        public static float LengthManhattan(this Vec3 v)
-        {
-            return Math.Abs(v.X) + Math.Abs(v.Y) + Math.Abs(v.Z);
-        }
-
-        public static float CompareToOriginal(this Bitmap a, Bitmap b)
-        {
-            if (a.Width != b.Width || a.Height != b.Height) throw new ArgumentException("bitmaps must be of same size", nameof(b));
-
-            double error = 0;
-            int count = 0;
-
-            for (int i = 0; i < a.Data.Length; i += 4)
-            {
-                var av = a.Data.GetVec4(i);
-                var bv = b.Data.GetVec4(i);
-
-                if (av.W == 0 || bv.W == 0) continue;
-
-                error += Vec4.Abs(bv - av)
-                    .GetVec3()
-                    .LengthManhattan();
-
-                ++count;
-            }
-
-            return (float)(error / count);
-        }
+        }        
 
         public static IMAGE ToImageSharp(this Bitmap image)
         {
@@ -89,23 +44,19 @@ namespace Epsylon.TextureSquish.UnitTests
 
         public static IMAGE SquishImage(this IMAGE srcImage, CompressionMode mode, CompressionOptions options, TestContext context)
         {
-            var srcBitmap = srcImage.ToSquishImage();
-
-            
+            var srcBitmap = srcImage.ToSquishImage();            
 
             var blocks = srcBitmap.Compress(mode,options);
 
             var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);
 
-            var error = (int)(100.0f * dstBitmap.CompareToOriginal(srcBitmap));
+            var stats = dstBitmap.CompareRGBToOriginal(srcBitmap);
 
-            context.WriteLine($"    Error: {error}");
+            context.WriteLine(stats.ToString());
             
             return dstBitmap.ToImageSharp();
         }
-
-        
-        
+                
         public static void ProcessFile(string filePath, TestContext context)
         {
             var srcImg = SixLabors.ImageSharp.Image.Load(filePath);

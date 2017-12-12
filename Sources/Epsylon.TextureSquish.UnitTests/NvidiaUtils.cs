@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using MathNet.Numerics.Statistics;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.Rgba32>;
