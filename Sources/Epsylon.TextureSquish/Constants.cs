@@ -27,20 +27,27 @@ namespace Epsylon.TextureSquish
     [Flags]
     public enum CompressionOptions
     {
+        None = 0,
+
         /// <summary>
         /// Use a fast but low quality colour compressor.
         /// </summary>
-        ColourRangeFit = 16,
+        ColourRangeFit = 1,
 
         /// <summary>
         /// Use a slow but high quality colour compressor (the default).
         /// </summary>
-        ColourClusterFit = 32,
+        ColourClusterFit = 2,
 
         /// <summary>
         /// Use a very slow but very high quality colour compressor.
         /// </summary>
-        ColourIterativeClusterFit = 64,
+        ColourIterativeClusterFit = 4,
+
+        /// <summary>
+        /// Alternative implementation of ClusterFit by Ignacio Castano & contributors
+        /// </summary>
+        ColourClusterFitAlt = 8,
 
         /// <summary>
         /// Use a perceptual metric for colour error (the default).
@@ -76,7 +83,7 @@ namespace Epsylon.TextureSquish
         public static CompressionOptions FixFlags(this CompressionOptions flags)
         {
             // grab the flag bits            
-            var fit = flags & (CompressionOptions.ColourIterativeClusterFit | CompressionOptions.ColourClusterFit | CompressionOptions.ColourRangeFit);
+            var fit = flags & (CompressionOptions.ColourIterativeClusterFit | CompressionOptions.ColourClusterFit | CompressionOptions.ColourRangeFit | CompressionOptions.ColourClusterFitAlt);
             var metric = flags & (CompressionOptions.ColourMetricPerceptual | CompressionOptions.ColourMetricUniform);
             var extra = flags & (CompressionOptions.WeightColourByAlpha | CompressionOptions.UseParallelProcessing);
 

@@ -11,7 +11,7 @@ namespace Epsylon.TextureSquish
 
         private static readonly Vec4 HALF_HALF2 = new Vec4(0.5f, 0.5f, 0.5f, 0.25f);
         private static readonly Vec4 HALF = new Vec4(0.5f);
-        private static readonly Vec4 GRID = new Vec4(31.0f, 63.0f, 31.0f, 0.0f);
+        private static readonly Vec4 GRID = new Vec4(31.0f, 63.0f, 31.0f, 1.0f);
         private static readonly Vec4 GRIDRCP = new Vec4(1) / GRID;
         private static readonly Vec4 ONETHIRD_ONETHIRD2 = new Vec4(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 9.0f);
         private static readonly Vec4 TWOTHIRDS_TWOTHIRDS2 = new Vec4(2.0f / 3.0f, 2.0f / 3.0f, 2.0f / 3.0f, 4.0f / 9.0f);
@@ -42,13 +42,12 @@ namespace Epsylon.TextureSquish
         {
             // cache some values
             var count = m_colours.Count;
-            var values = m_colours.Points;
-
-            // build the list of dot products
-            var dps = new float[16];
+            var values = m_colours.Points;            
 
             var orderIndex = 16 * iteration;
 
+            // build the list of dot products
+            var dps = new float[count];
             for (int i = 0; i < count; ++i)
             {
                 dps[i] = Vec3.Dot(values[i], axis);
@@ -56,7 +55,7 @@ namespace Epsylon.TextureSquish
             }
 
             // stable sort using them
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < dps.Length; ++i)
             {
                 for (int j = i; j > 0 && dps[j] < dps[j - 1]; --j)
                 {

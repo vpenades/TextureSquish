@@ -24,7 +24,13 @@ namespace Epsylon.TextureSquish
 
         private readonly float[] m_x;
 
+
         public static Sym3x3 ComputeWeightedCovariance(int n, Vec3[] points, float[] weights)
+        {
+            return ComputeWeightedCovariance(n, points, weights, Vec3.One);
+        }
+
+        public static Sym3x3 ComputeWeightedCovariance(int n, Vec3[] points, float[] weights, Vec3 metric)
         {
             // compute the centroid
             float total = 0.0f;
@@ -35,14 +41,14 @@ namespace Epsylon.TextureSquish
                 total += weights[i];
                 centroid += weights[i] * points[i];
             }
-            if (total > float.Epsilon) centroid /= total;
+            centroid /= total;
 
             // accumulate the covariance matrix
-            var covariance = new Sym3x3( 0 );
+            var covariance = new Sym3x3( 0.0f );
             for (int i = 0; i < n; ++i)
             {
-                Vec3 a = points[i] - centroid;
-                Vec3 b = weights[i] * a;
+                var a = (points[i] - centroid) * metric;
+                var b = weights[i] * a;
 
                 covariance[0] += a.X * b.X;
                 covariance[1] += a.X * b.Y;
@@ -55,6 +61,8 @@ namespace Epsylon.TextureSquish
             // return it
             return covariance;
         }
+
+        
 
         public static Vec3 ComputePrincipleComponent(Sym3x3 matrix)
         {

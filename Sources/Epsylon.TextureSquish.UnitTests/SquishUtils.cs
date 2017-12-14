@@ -55,9 +55,9 @@ namespace Epsylon.TextureSquish.UnitTests
             return dstBitmap.ToImageSharp();
         }
                 
-        public static void ProcessFile(string filePath, TestContext context)
+        public static void ProcessFile(string method, string filePath, TestContext context)
         {
-            var srcImg = SixLabors.ImageSharp.Image.Load(filePath);
+            var srcImg = SixLabors.ImageSharp.Image.Load(filePath);            
 
             void processNVidia(CompressionMode mode, string ext)
             {
@@ -71,29 +71,63 @@ namespace Epsylon.TextureSquish.UnitTests
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
                 context.WriteLine($"{dstFileName} with {mode}");
                 srcImg.SquishImage(mode, options, context).Save(dstFileName);
-            }            
+            }
 
-            processNVidia(CompressionMode.Dxt1, "Dx1-NVidia.png");
-            processNVidia(CompressionMode.Dxt3, "Dx3-NVidia.png");
-            processNVidia(CompressionMode.Dxt5, "Dx5-NVidia.png");
+            if (method == "NVIDIA")
+            {
+                processNVidia(CompressionMode.Dxt1, "Dx1-NVidia.png");
+                processNVidia(CompressionMode.Dxt3, "Dx3-NVidia.png");
+                processNVidia(CompressionMode.Dxt5, "Dx5-NVidia.png");
+                return;
+            }
 
-            var flags = CompressionOptions.ColourRangeFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
+                
 
-            processSquish(CompressionMode.Dxt1 , flags, "Dx1-RangeFit.png");
-            processSquish(CompressionMode.Dxt3 , flags, "Dx3-RangeFit.png");
-            processSquish(CompressionMode.Dxt5 , flags, "Dx5-RangeFit.png");
+            #if DEBUG
+            var xflags = CompressionOptions.None;
+            #else
+            var xflags = CompressionOptions.UseParallelProcessing | CompressionOptions.None;
+            #endif
 
-            flags = CompressionOptions.ColourClusterFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
+            if (method == "RANGEFIT")
+            {
+                var flags = xflags | CompressionOptions.ColourRangeFit;
 
-            processSquish(CompressionMode.Dxt1 , flags, "Dx1-ClusterFit.png");
-            processSquish(CompressionMode.Dxt3 , flags, "Dx3-ClusterFit.png");
-            processSquish(CompressionMode.Dxt5 , flags, "Dx5-ClusterFit.png");
+                processSquish(CompressionMode.Dxt1, flags, "Dx1-RangeFit.png");
+                processSquish(CompressionMode.Dxt3, flags, "Dx3-RangeFit.png");
+                processSquish(CompressionMode.Dxt5, flags, "Dx5-RangeFit.png");
+                return;
+            }
 
-            flags = CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing | CompressionOptions.WeightColourByAlpha;
+            if (method == "CLUSTERFIT")
+            {
+                var flags = xflags | CompressionOptions.ColourClusterFit;
 
-            processSquish(CompressionMode.Dxt1 , flags, "Dx1-IterClusterFit.png");
-            processSquish(CompressionMode.Dxt3 , flags, "Dx3-IterClusterFit.png");
-            processSquish(CompressionMode.Dxt5 , flags, "Dx5-IterClusterFit.png");
+                processSquish(CompressionMode.Dxt1, flags, "Dx1-ClusterFit.png");
+                processSquish(CompressionMode.Dxt3, flags, "Dx3-ClusterFit.png");
+                processSquish(CompressionMode.Dxt5, flags, "Dx5-ClusterFit.png");
+                return;
+            }
+
+            if (method == "CLUSTERFIT_ALT")
+            {
+                var flags = xflags | CompressionOptions.ColourClusterFit;
+
+                processSquish(CompressionMode.Dxt1, flags, "Dx1-ClusterFitAlt.png");
+                processSquish(CompressionMode.Dxt3, flags, "Dx3-ClusterFitAlt.png");
+                processSquish(CompressionMode.Dxt5, flags, "Dx5-ClusterFitAlt.png");
+                return;
+            }
+
+            if (method == "CLUSTERFIT_ITER")
+            {
+                var flags = xflags | CompressionOptions.ColourClusterFit;
+
+                processSquish(CompressionMode.Dxt1, flags, "Dx1-ClusterFitIter.png");
+                processSquish(CompressionMode.Dxt3, flags, "Dx3-ClusterFitIter.png");
+                processSquish(CompressionMode.Dxt5, flags, "Dx5-ClusterFitIter.png");
+                return;
+            }
         }        
     }
 

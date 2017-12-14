@@ -19,20 +19,25 @@ namespace Epsylon.TextureSquish.UnitTests
             set { testContextInstance = value; }
         }
 
-        [TestMethod]
-        public void ConversionTest1()
+        [DataTestMethod]
+        [DataRow("NVIDIA")]
+        [DataRow("RANGEFIT")]
+        [DataRow("CLUSTERFIT")]
+        [DataRow("CLUSTERFIT_ALT")]
+        [DataRow("CLUSTERFIT_ITER")]        
+        public void ConversionTest1(string method)
         {
-            SquishUtils.ProcessFile("TestFiles\\squish_test_original.png", TestContext);            
+            SquishUtils.ProcessFile(method,"TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png", TestContext);
 
-            SquishUtils.ProcessFile("TestFiles\\UVGrid1.jpg", TestContext);
-            SquishUtils.ProcessFile("TestFiles\\UVGrid2.jpg", TestContext);
+            SquishUtils.ProcessFile(method,"TestFiles\\squish_test_original.png", TestContext);            
 
-            SquishUtils.ProcessFile("TestFiles\\Ivy1.png", TestContext);
+            SquishUtils.ProcessFile(method,"TestFiles\\UVGrid1.jpg", TestContext);
+            SquishUtils.ProcessFile(method,"TestFiles\\UVGrid2.jpg", TestContext);
 
-            SquishUtils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_large.png", TestContext);
-            SquishUtils.ProcessFile("TestFiles\\Rainbow_to_alpha_gradient_small.png", TestContext);
+            SquishUtils.ProcessFile(method,"TestFiles\\Ivy1.png", TestContext);
 
-            SquishUtils.ProcessFile("TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png", TestContext);            
+            SquishUtils.ProcessFile(method,"TestFiles\\Rainbow_to_alpha_gradient_large.png", TestContext);
+            SquishUtils.ProcessFile(method,"TestFiles\\Rainbow_to_alpha_gradient_small.png", TestContext);            
         }
 
         [TestMethod]
@@ -52,7 +57,17 @@ namespace Epsylon.TextureSquish.UnitTests
             watch.Stop();
             var netTime = watch.Elapsed;
 
-            TestContext.WriteLine($"NET time: {netTime}");
+            TestContext.WriteLine($"ClusterFit Iterative time: {netTime}");
+
+            watch.Restart();
+            for (int i = 0; i < 100; ++i)
+            {
+                toSquish.Compress(CompressionMode.Dxt5, CompressionOptions.ColourClusterFitAlt | CompressionOptions.UseParallelProcessing);
+            }
+            watch.Stop();
+            netTime = watch.Elapsed;
+
+            TestContext.WriteLine($"ClusterFit Alt time: {netTime}");
 
             watch.Restart();
             for (int i = 0; i < 100; ++i)

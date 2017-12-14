@@ -302,9 +302,17 @@ namespace Epsylon.TextureSquish
             }
             else
             {
-                // default to a cluster fit (could be iterative or not)
-                var fit = new ClusterFit(colours, options);
-                fit.Compress(this);
+                if ((options & CompressionOptions.ColourClusterFitAlt) != 0)
+                {
+                    var fit = new ClusterFitAlt(colours, options);
+                    fit.Compress(this);
+                }
+                else
+                {
+                    // default to a cluster fit (could be iterative or not)
+                    var fit = new ClusterFit(colours, options);
+                    fit.Compress(this);
+                }                
             }
 
             // compress alpha separately if necessary

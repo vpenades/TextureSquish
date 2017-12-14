@@ -8,7 +8,7 @@ using Vec4 = System.Numerics.Vector4;
 namespace Epsylon.TextureSquish
 {
     static class MathUtils
-    {
+    {        
         public static void SwapElements<T>(this T[] array, int index1, int index2)
         {
             T tmp = array[index1];
@@ -119,6 +119,11 @@ namespace Epsylon.TextureSquish
                 (float)(v.Z > 0 ? Math.Floor(v.Z) : Math.Ceiling(v.Z)),
                 (float)(v.W > 0 ? Math.Floor(v.W) : Math.Ceiling(v.W))
             );
+        }
+
+        public static bool CompareAnyLessThan(this float left, float right)
+        {
+            return left < right;
         }
 
         public static bool CompareAnyLessThan(this Vec4 left, Vec4 right)
