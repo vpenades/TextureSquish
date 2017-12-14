@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 using Vec3 = System.Numerics.Vector3;
 using Vec4 = System.Numerics.Vector4;
@@ -9,7 +8,7 @@ namespace Epsylon.TextureSquish
     class ClusterFit : ColourFit
     {
         private const int MAXITERATIONS = 8;
-        
+
         private static readonly Vec4 HALF_HALF2 = new Vec4(0.5f, 0.5f, 0.5f, 0.25f);
         private static readonly Vec4 HALF = new Vec4(0.5f);
         private static readonly Vec4 GRID = new Vec4(31.0f, 63.0f, 31.0f, 0.0f);
@@ -23,12 +22,9 @@ namespace Epsylon.TextureSquish
             // set the iteration count
             m_iterationCount = (flags & CompressionOptions.ColourIterativeClusterFit) != 0 ? MAXITERATIONS : 1;
 
-            // initialise the best error
-            m_besterror = new Vec4(float.MaxValue);
-
             // initialise the metric
             bool perceptual = ((flags & CompressionOptions.ColourMetricPerceptual) != 0);
-            
+
             m_metric = perceptual ? new Vec4(0.2126f, 0.7152f, 0.0722f, 0.0f) : Vec4.One;
 
             // cache some values
@@ -49,14 +45,14 @@ namespace Epsylon.TextureSquish
             var values = m_colours.Points;
 
             // build the list of dot products
-            var dps = new float[16];            
+            var dps = new float[16];
 
-            var orderIndex =16*iteration;           
+            var orderIndex = 16 * iteration;
 
             for (int i = 0; i < count; ++i)
             {
                 dps[i] = Vec3.Dot(values[i], axis);
-                m_order[orderIndex+i] = (Byte)i;
+                m_order[orderIndex + i] = (Byte)i;
             }
 
             // stable sort using them
@@ -76,14 +72,13 @@ namespace Epsylon.TextureSquish
                 bool same = true;
                 for (int i = 0; i < count; ++i)
                 {
-                    if (m_order[orderIndex + i] != m_order[prevIdx+i])
+                    if (m_order[orderIndex + i] != m_order[prevIdx + i])
                     {
                         same = false;
                         break;
                     }
                 }
-                if (same)
-                    return false;
+                if (same) return false;
             }
 
             // copy the ordering and weight all the points
@@ -108,14 +103,15 @@ namespace Epsylon.TextureSquish
         {
             // declare variables
             var count = m_colours.Count;
-            
+
             // prepare an ordering using the principle axis
             ConstructOrdering(m_principle, 0);
 
             // check all possible clusters and iterate on the total order
             Vec4 beststart = Vec4.Zero;
             Vec4 bestend = Vec4.Zero;
-            Vec4 besterror = m_besterror;
+            float m_besterror = float.MaxValue;
+            float besterror = m_besterror;
             var bestindices = new Byte[16];
             int bestiteration = 0;
             int besti = 0, bestj = 0;
@@ -137,36 +133,13 @@ namespace Epsylon.TextureSquish
 
                         // compute least squares terms directly
                         Vec4 alphax_sum = HALF_HALF2.MultiplyAdd(part1, part0);
-                        Vec4 betax_sum  = HALF_HALF2.MultiplyAdd(part1, part2);
-
-                        Vec4 alpha2_sum = alphax_sum.SplatW();
-                        Vec4 beta2_sum  = betax_sum.SplatW();
-
+                        Vec4 betax_sum = HALF_HALF2.MultiplyAdd(part1, part2);
                         Vec4 alphabeta_sum = (part1 * HALF_HALF2).SplatW();
 
-                        // compute the least-squares optimal points
-                        Vec4 factor = alphabeta_sum.NegativeMultiplySubtract(alphabeta_sum, alpha2_sum * beta2_sum).Reciprocal();
-                        Vec4 a      =     betax_sum.NegativeMultiplySubtract(alphabeta_sum, alphax_sum * beta2_sum) * factor;
-                        Vec4 b      =    alphax_sum.NegativeMultiplySubtract(alphabeta_sum, betax_sum * alpha2_sum) * factor;
-
-                        // clamp to the grid
-                        a = a.Clamp(Vec4.Zero,Vec4.One);
-                        b = b.Clamp(Vec4.Zero,Vec4.One);
-                        a = GRID.MultiplyAdd(a, HALF).Truncate() * GRIDRCP;
-                        b = GRID.MultiplyAdd(b, HALF).Truncate() * GRIDRCP;
-
-                        // compute the error (we skip the constant xxsum)
-                        Vec4 e1 = (a * a * alpha2_sum) + (b * b * beta2_sum);
-                        Vec4 e2 = a.NegativeMultiplySubtract(alphax_sum, a * b * alphabeta_sum);
-                        Vec4 e3 = b.NegativeMultiplySubtract(betax_sum, e2);
-                        Vec4 e4 = e3 * 2 + e1;
-
-                        // apply the metric to the error term
-                        Vec4 e5 = e4 * m_metric;
-                        Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+                        var error = ComputeLeastSquares(alphax_sum, betax_sum, alphabeta_sum, out Vec4 a, out Vec4 b);
 
                         // keep the solution if it wins
-                        if (error.CompareAnyLessThan(besterror))
+                        if (error < besterror)
                         {
                             beststart = a;
                             bestend = b;
@@ -199,13 +172,13 @@ namespace Epsylon.TextureSquish
             }
 
             // save the block if necessary
-            if (besterror.CompareAnyLessThan(m_besterror))
+            if (besterror < m_besterror)
             {
                 // remap the indices
                 var orderIndex = 16 * bestiteration;
 
                 var unordered = new Byte[16];
-                for (int m = 0;     m < besti; ++m) unordered[m_order[orderIndex + m]] = 0;
+                for (int m = 0; m < besti; ++m) unordered[m_order[orderIndex + m]] = 0;
                 for (int m = besti; m < bestj; ++m) unordered[m_order[orderIndex + m]] = 2;
                 for (int m = bestj; m < count; ++m) unordered[m_order[orderIndex + m]] = 1;
 
@@ -223,14 +196,15 @@ namespace Epsylon.TextureSquish
         {
             // declare variables
             var count = m_colours.Count;
-            
+
             // prepare an ordering using the principle axis
             ConstructOrdering(m_principle, 0);
 
             // check all possible clusters and iterate on the total order
             Vec4 beststart = Vec4.Zero;
             Vec4 bestend = Vec4.Zero;
-            Vec4 besterror = m_besterror;
+            float m_besterror = float.MaxValue;
+            float besterror = m_besterror;
             var bestindices = new Byte[16];
             int bestiteration = 0;
             int besti = 0, bestj = 0, bestk = 0;
@@ -256,36 +230,13 @@ namespace Epsylon.TextureSquish
 
                             // compute least squares terms directly
                             Vec4 alphax_sum = ONETHIRD_ONETHIRD2.MultiplyAdd(part2, TWOTHIRDS_TWOTHIRDS2.MultiplyAdd(part1, part0));
-                            Vec4 betax_sum  = ONETHIRD_ONETHIRD2.MultiplyAdd(part1, TWOTHIRDS_TWOTHIRDS2.MultiplyAdd(part2, part3));
-
-                            Vec4 alpha2_sum = alphax_sum.SplatW();
-                            Vec4 beta2_sum = betax_sum.SplatW();
-
+                            Vec4 betax_sum = ONETHIRD_ONETHIRD2.MultiplyAdd(part1, TWOTHIRDS_TWOTHIRDS2.MultiplyAdd(part2, part3));
                             Vec4 alphabeta_sum = TWONINETHS * (part1 + part2).SplatW();
 
-                            // compute the least-squares optimal points
-                            Vec4 factor = alphabeta_sum.NegativeMultiplySubtract(alphabeta_sum, alpha2_sum * beta2_sum).Reciprocal();
-                            Vec4 a      =     betax_sum.NegativeMultiplySubtract(alphabeta_sum, alphax_sum * beta2_sum) * factor;
-                            Vec4 b      =    alphax_sum.NegativeMultiplySubtract(alphabeta_sum, betax_sum * alpha2_sum) * factor;
-
-                            // clamp to the grid
-                            a = a.Clamp(Vec4.Zero,Vec4.One);
-                            b = b.Clamp(Vec4.Zero, Vec4.One);
-                            a = GRID.MultiplyAdd(a, HALF).Truncate() * GRIDRCP;
-                            b = GRID.MultiplyAdd(b, HALF).Truncate() * GRIDRCP;
-
-                            // compute the error (we skip the constant xxsum)
-                            Vec4 e1 = (a * a * alpha2_sum) + (b * b * beta2_sum);
-                            Vec4 e2 = a.NegativeMultiplySubtract(alphax_sum, a * b * alphabeta_sum);
-                            Vec4 e3 = b.NegativeMultiplySubtract(betax_sum, e2);
-                            Vec4 e4 = e3 * 2 + e1;
-
-                            // apply the metric to the error term
-                            Vec4 e5 = e4 * m_metric;
-                            Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+                            var error = ComputeLeastSquares(alphax_sum, betax_sum, alphabeta_sum, out Vec4 a, out Vec4 b);
 
                             // keep the solution if it wins
-                            if (error.CompareAnyLessThan(besterror))
+                            if (error < besterror)
                             {
                                 beststart = a;
                                 bestend = b;
@@ -325,13 +276,13 @@ namespace Epsylon.TextureSquish
             }
 
             // save the block if necessary
-            if (besterror.CompareAnyLessThan(m_besterror))
+            if (besterror < m_besterror)
             {
                 // remap the indices
                 var orderIndex = 16 * bestiteration;
 
                 var unordered = new Byte[16];
-                for (int m = 0;     m < besti; ++m) unordered[m_order[orderIndex + m]] = 0;
+                for (int m = 0; m < besti; ++m) unordered[m_order[orderIndex + m]] = 0;
                 for (int m = besti; m < bestj; ++m) unordered[m_order[orderIndex + m]] = 2;
                 for (int m = bestj; m < bestk; ++m) unordered[m_order[orderIndex + m]] = 3;
                 for (int m = bestk; m < count; ++m) unordered[m_order[orderIndex + m]] = 1;
@@ -344,7 +295,35 @@ namespace Epsylon.TextureSquish
                 // save the error
                 m_besterror = besterror;
             }
-        }        
+        }
+
+        private float ComputeLeastSquares(Vec4 alphax_sum, Vec4 betax_sum, Vec4 alphabeta_sum, out Vec4 a, out Vec4 b)
+        {
+            Vec4 alpha2_sum = alphax_sum.SplatW();
+            Vec4 beta2_sum = betax_sum.SplatW();
+
+            // compute the least-squares optimal points
+            Vec4 factor = alphabeta_sum.NegativeMultiplySubtract(alphabeta_sum, alpha2_sum * beta2_sum).Reciprocal();
+            a = betax_sum.NegativeMultiplySubtract(alphabeta_sum, alphax_sum * beta2_sum) * factor;
+            b = alphax_sum.NegativeMultiplySubtract(alphabeta_sum, betax_sum * alpha2_sum) * factor;
+
+            // clamp to the grid
+            a = a.Clamp(Vec4.Zero, Vec4.One);
+            b = b.Clamp(Vec4.Zero, Vec4.One);
+            a = GRID.MultiplyAdd(a, HALF).Truncate() * GRIDRCP;
+            b = GRID.MultiplyAdd(b, HALF).Truncate() * GRIDRCP;
+
+            // compute the error (we skip the constant xxsum)
+            Vec4 e1 = (a * a * alpha2_sum) + (b * b * beta2_sum);
+            Vec4 e2 = a.NegativeMultiplySubtract(alphax_sum, a * b * alphabeta_sum);
+            Vec4 e3 = b.NegativeMultiplySubtract(betax_sum, e2);
+            Vec4 e4 = e3 * 2 + e1;
+
+            // apply the metric to the error term
+            Vec4 e5 = e4 * m_metric;
+
+            return e5.X + e5.Y + e5.Z;
+        }
 
         private readonly int m_iterationCount;
         private readonly Vec3 m_principle;
@@ -352,8 +331,7 @@ namespace Epsylon.TextureSquish
         private readonly Vec4[] m_points_weights = new Vec4[16];
         private readonly Vec4 m_metric;
 
-        private Vec4 m_xsum_wsum;        
-        private Vec4 m_besterror;
+        private Vec4 m_xsum_wsum;
     }
 }
 
