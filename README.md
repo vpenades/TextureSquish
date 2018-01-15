@@ -14,4 +14,5 @@ Other Texture Compressors:
 - [LibSquishNet](https://github.com/MaxxWyndham/LibSquishNet) also based on LibSquish
 - [StbSharp](https://github.com/rds1983/StbSharp) based on STB
 - [NVidia Texture Tools by Ignacio Castano](https://github.com/castano/nvidia-texture-tools)
+- [Microsoft DirectXTex Tools](https://github.com/Microsoft/DirectXTex)
 
