@@ -14,5 +14,8 @@ Other Texture Compressors:
 - [LibSquishNet](https://github.com/MaxxWyndham/LibSquishNet) also based on LibSquish
 - [StbSharp](https://github.com/rds1983/StbSharp) based on STB
 - [NVidia Texture Tools by Ignacio Castano](https://github.com/castano/nvidia-texture-tools)
+ -[NVidia resources](https://developer.nvidia.com/astc-texture-compression-for-game-assets)
 - [Microsoft DirectXTex Tools](https://github.com/Microsoft/DirectXTex)
-
+- [Binomial](http://www.binomial.info/) [Github](https://github.com/BinomialLLC/crunch)
+ -[Ericsson ETC1](https://github.com/Ericsson/ETCPACK)
+ -[ARM ASTC](https://github.com/ARM-software/astc-encoder)
