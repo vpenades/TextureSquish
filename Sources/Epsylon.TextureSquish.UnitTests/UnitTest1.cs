@@ -1,6 +1,5 @@
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using SixLabors.ImageSharp;
 
 namespace Epsylon.TextureSquish.UnitTests
 {
@@ -44,8 +43,10 @@ namespace Epsylon.TextureSquish.UnitTests
         public void PerformanceTest1()
         {
             var srcImg = SixLabors.ImageSharp.Image.Load("TestFiles\\Rainbow_to_alpha_gradient_large.png");
-
             var toSquish = srcImg.ToSquishImage();
+            StbSharp.Image image;
+            using (var stream = File.OpenRead("TestFiles\\Rainbow_to_alpha_gradient_large.png"))
+                image = new StbSharp.ImageReader().Read(stream);
 
             var watch = new System.Diagnostics.Stopwatch();
 
@@ -68,6 +69,26 @@ namespace Epsylon.TextureSquish.UnitTests
             netTime = watch.Elapsed;
 
             TestContext.WriteLine($"ClusterFit Alt time: {netTime}");
+
+            watch.Restart();
+            for (int i = 0; i < 100; ++i)
+            {
+                StbSharp.Stb.stb_compress_dxt(image, true);
+            }
+            watch.Stop();
+            var stbTime = watch.Elapsed;
+
+            TestContext.WriteLine($"Stb time: {stbTime}");
+
+            watch.Restart();
+            for (int i = 0; i < 100; ++i)
+            {
+                StbSharp.Stb.stb_compress_dxt(image, true, 2);
+            }
+            watch.Stop();
+            var stbHqTime = watch.Elapsed;
+
+            TestContext.WriteLine($"Stb HQ time: {stbHqTime}");
 
             watch.Restart();
             for (int i = 0; i < 100; ++i)
