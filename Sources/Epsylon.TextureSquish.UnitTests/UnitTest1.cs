@@ -19,6 +19,7 @@ namespace Epsylon.TextureSquish.UnitTests
         }
 
         [DataTestMethod]
+        [DataRow("STB")]
         [DataRow("NVIDIA")]
         [DataRow("RANGEFIT")]
         [DataRow("CLUSTERFIT")]

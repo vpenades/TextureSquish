@@ -59,6 +59,31 @@ namespace Epsylon.TextureSquish.UnitTests
         {
             var srcImg = SixLabors.ImageSharp.Image.Load(filePath);            
 
+            void processSTB(CompressionMode mode, bool useAlpha, string ext)
+            {
+                var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
+                context.WriteLine($"{dstFileName} with {mode}");
+                
+                using (var stream = System.IO.File.OpenRead(filePath))
+                {
+                    var srcImage = new StbSharp.ImageReader().Read(stream);
+
+                    if (srcImage.Comp != 4) return; // TODO: should convert RGB to RGBA
+
+                    // flags bits:
+                    // 1 = dither
+                    // 2 = refine count (1 or 2)
+
+                    var bytes = StbSharp.Stb.stb_compress_dxt(srcImage, useAlpha, 2);                    
+
+                    var dstImage = Bitmap
+                        .Decompress(srcImage.Width, srcImage.Height, bytes, mode)
+                        .ToImageSharp();
+
+                    dstImage.Save(dstFileName);
+                }
+            }
+
             void processNVidia(CompressionMode mode, string ext)
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
@@ -73,15 +98,22 @@ namespace Epsylon.TextureSquish.UnitTests
                 srcImg.SquishImage(mode, options, context).Save(dstFileName);
             }
 
+            if (method == "STB")
+            {
+                processSTB(CompressionMode.Dxt1, false, "Dx1-STB-NoAlpha.png");
+                processSTB(CompressionMode.Dxt1, true, "Dx1-STB.png");
+                processSTB(CompressionMode.Dxt3, true, "Dx3-STB.png");
+                processSTB(CompressionMode.Dxt5, true, "Dx5-STB.png");
+                return;
+            }
+
             if (method == "NVIDIA")
             {
                 processNVidia(CompressionMode.Dxt1, "Dx1-NVidia.png");
                 processNVidia(CompressionMode.Dxt3, "Dx3-NVidia.png");
                 processNVidia(CompressionMode.Dxt5, "Dx5-NVidia.png");
                 return;
-            }
-
-                
+            }                
 
             #if DEBUG
             var xflags = CompressionOptions.None;
