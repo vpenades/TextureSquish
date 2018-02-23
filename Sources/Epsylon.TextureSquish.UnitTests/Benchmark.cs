@@ -8,6 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MathNet.Numerics.Statistics;
 
+using static System.FormattableString;
+
 namespace Epsylon.TextureSquish.UnitTests
 {
     class BenchMark
@@ -39,6 +41,48 @@ namespace Epsylon.TextureSquish.UnitTests
         public override string ToString()
         {
             return BenchmarkReport.ToString(_Reports);
+        }
+
+        public string ToCSV()
+        {
+            var sb = new StringBuilder();
+
+            var header = string.Empty;
+            foreach(var r in _Reports)
+            {
+                if (header.Length > 0) header += ", ";
+                header += $"\"{r.Name}\"";
+            }
+            sb.AppendLine(header);
+
+            int idx = 0;
+
+            while(true)
+            {
+                var line = string.Empty;
+                bool hasValues = false;
+
+                foreach(var r in _Reports)
+                {
+                    if (line.Length > 0) line += ", ";
+
+                    bool hasValue = r.PartialTimes.Count > idx;
+
+                    if (hasValue)
+                    {
+                        hasValues = true;
+                        line += Invariant($"{r.PartialTimes[idx].TotalSeconds}");
+                    }
+                    else line += " "; // required to add some content
+                }
+
+                if (hasValues == false) break;
+
+                sb.AppendLine(line);
+                ++idx;
+            }
+
+            return sb.ToString();
         }
 
     }
@@ -102,6 +146,8 @@ namespace Epsylon.TextureSquish.UnitTests
         public string Name => _Name;
 
         public TimeSpan TotalTime => _TotalTime;
+
+        public IReadOnlyList<TimeSpan> PartialTimes => _PartialTimes;
 
         public TimeSpan AverageTime => new TimeSpan((long)_PartialTimes.Select(item => item.Ticks).Average());
 

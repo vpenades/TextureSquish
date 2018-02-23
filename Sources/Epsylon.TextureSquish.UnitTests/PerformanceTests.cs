@@ -82,6 +82,10 @@ namespace Epsylon.TextureSquish.UnitTests
             var nvt = benchmark.GetReport("NVidia").TotalTime.TotalSeconds;
 
             context.WriteLine($"IterativeClusterFit is {icf/nvt} slower tha nVidia");
+
+            var csv = benchmark.ToCSV();
+
+            System.IO.File.WriteAllText(imagePath + ".csv", csv);
         }
 
         private static StbSharp.Image LoadStbImage(string imagePath)
