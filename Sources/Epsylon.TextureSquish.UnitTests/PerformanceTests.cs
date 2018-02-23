@@ -45,6 +45,34 @@ namespace Epsylon.TextureSquish.UnitTests
             _PerformanceTest(TestContext, "TestFiles\\ivy1.png");
         }
 
+        [TestMethod]
+        public void PerformanceTestWorstCase()
+        {
+            var imagePath = "TestFiles\\ivy1.png";
+
+            var srcImg = SixLabors.ImageSharp.Image.Load(imagePath);
+            var squishImg = srcImg.ToSquishImage();
+
+            var benchmark = new BenchMark() { DefaultRepetitions = 30 };
+
+            benchmark.Repeat("Dxt1", () =>
+            {
+                squishImg.Compress(CompressionMode.Dxt1, CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing);                
+            });
+
+            benchmark.Repeat("Dxt3", () =>
+            {
+                squishImg.Compress(CompressionMode.Dxt3, CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing);
+            });
+
+            benchmark.Repeat("Dxt5", () =>
+            {
+                squishImg.Compress(CompressionMode.Dxt5, CompressionOptions.ColourIterativeClusterFit | CompressionOptions.UseParallelProcessing);
+            });
+
+            TestContext.WriteLine(benchmark.ToString());
+        }
+
 
         private static void _PerformanceTest(TestContext context, string imagePath)
         {

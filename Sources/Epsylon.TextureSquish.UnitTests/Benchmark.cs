@@ -153,7 +153,7 @@ namespace Epsylon.TextureSquish.UnitTests
 
         public override string ToString()
         {
-            return $"{_Name} tool {_TotalTime} to do {_PartialTimes.Length} Average {AverageTime}";
+            return $"{_Name} took {_TotalTime} to do {_PartialTimes.Length} Average: {AverageTime}";
         }
 
         public static string ToString(IEnumerable<BenchmarkReport> reports)

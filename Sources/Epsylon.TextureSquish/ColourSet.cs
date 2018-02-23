@@ -10,11 +10,47 @@ namespace Epsylon.TextureSquish
     /// </summary>
     class ColourSet
     {
+        #region lifecycle
+
         public ColourSet(Byte[] rgba, int mask, CompressionMode mode,CompressionOptions options)
         {
             // check the compression mode for dxt1
             bool isDxt1 = ((mode & CompressionMode.Dxt1) != 0);
             bool weightByAlpha = ((options & CompressionOptions.WeightColourByAlpha) != 0);
+            Initialize(rgba, mask, isDxt1 ? 128 : 1, weightByAlpha);
+        }
+
+        #endregion
+
+        #region data
+
+        private int _Count;
+        private bool _Transparent;
+
+        private readonly Vec3[] _Points = new Vec3[16];
+        private readonly float[] _Weights = new float[16];
+        private readonly int[] _Remap = new int[16];
+
+        #endregion
+
+        #region properties
+
+        public int Count => _Count;
+
+        public Vec3[] Points => _Points;
+
+        public float[] Weights => _Weights;
+
+        public bool IsTransparent => _Transparent;
+
+        #endregion
+
+        #region code
+
+        public void Initialize(byte[] rgba, int mask, int alphaThreshold, bool weightByAlpha)
+        {
+            _Count = 0;
+            _Transparent = false;
 
             // create the minimal set
             for (int i = 0; i < 16; ++i)
@@ -23,15 +59,15 @@ namespace Epsylon.TextureSquish
                 int bit = 1 << i;
                 if ((mask & bit) == 0)
                 {
-                    m_remap[i] = -1;
+                    _Remap[i] = -1;
                     continue;
                 }
 
                 // check for transparent pixels when using dxt1
-                if (isDxt1 && rgba[4 * i + 3] < 128)
+                if (rgba[4 * i + 3] < alphaThreshold)
                 {
-                    m_remap[i] = -1;
-                    m_transparent = true;
+                    _Remap[i] = -1;
+                    _Transparent = true;
                     continue;
                 }
 
@@ -41,70 +77,97 @@ namespace Epsylon.TextureSquish
                     // allocate a new point
                     if (j == i)
                     {
-                        // ensure there is always non-zero weight even for zero alpha
-                        float w = (float)(rgba[4 * i + 3] + 1) / 256.0f;
-
-                        // add the point
-                        m_points[m_count] = new Vec3(rgba[4 * i + 0], rgba[4 * i + 1], rgba[4 * i + 2]) / 255.0f;
-                        m_weights[m_count] = (weightByAlpha ? w : 1.0f);
-                        m_remap[i] = m_count;
-
-                        // advance
-                        ++m_count;
+                        AddPoint(rgba, i, weightByAlpha);
                         break;
                     }
 
                     // check for a match
-                    int oldbit = 1 << j;
-                    bool match = ((mask & oldbit) != 0)
-                        && (rgba[4 * i + 0] == rgba[4 * j + 0])
-                        && (rgba[4 * i + 1] == rgba[4 * j + 1])
-                        && (rgba[4 * i + 2] == rgba[4 * j + 2])
-                        && (rgba[4 * j + 3] >= 128 || !isDxt1);
-
-                    if (match)
+                    if (IsMatch(rgba, mask, alphaThreshold, i, j))
                     {
-                        // get the index of the match
-                        int index = m_remap[j];
-
-                        // ensure there is always non-zero weight even for zero alpha
-                        float w = (float)(rgba[4 * i + 3] + 1) / 256.0f;
-
-                        // map to this point and increase the weight
-                        m_weights[index] += (weightByAlpha ? w : 1.0f);
-                        m_remap[i] = index;
+                        AddWeight(rgba, i, j, weightByAlpha);
                         break;
                     }
                 }
             }
 
             // square root the weights
-            for (int i = 0; i < m_count; ++i)
-                m_weights[i] = (float)Math.Sqrt(m_weights[i]);
+            for (int i = 0; i < _Count; ++i)
+                _Weights[i] = (float)Math.Sqrt(_Weights[i]);
         }
 
-        public int Count => m_count;
-        public Vec3[] Points => m_points;
-        public float[] Weights => m_weights;
-        public bool IsTransparent => m_transparent;
+        private static bool IsMatch(byte[] rgba, int mask, int alphaThreshold, int i, int j)
+        {
+            int oldbit = 1 << j;
+
+            if ((mask & oldbit) == 0) return false;
+
+            i *= 4;
+            j *= 4;
+
+            if (rgba[i + 0] != rgba[j + 0]) return false;
+            if (rgba[i + 1] != rgba[j + 1]) return false;
+            if (rgba[i + 2] != rgba[j + 2]) return false;
+            if (rgba[j + 3] < alphaThreshold) return false;
+
+            return true;
+        }
+
+        private void AddWeight(byte[] rgba, int i, int j, bool weightByAlpha)
+        {
+            // get the index of the match
+            int index = _Remap[j];
+
+            _Remap[i] = index;
+
+            if (weightByAlpha)
+            {
+                // ensure there is always non-zero weight even for zero alpha
+                float w = (float)(rgba[4 * i + 3] + 1) / 256.0f;
+                // map to this point and increase the weight
+                _Weights[index] += w;
+            }
+            else
+            {
+                // map to this point and increase the weight
+                _Weights[index] += 1.0f;
+            }
+        }
+
+        private void AddPoint(byte[] rgba, int i, bool weightByAlpha)
+        {
+            _Remap[i] = _Count;
+
+            i *= 4;
+
+            _Points[_Count] = new Vec3(rgba[i + 0], rgba[i + 1], rgba[i + 2]) / 255.0f;
+
+            if (weightByAlpha)
+            {
+                // ensure there is always non-zero weight even for zero alpha
+                float w = (float)(rgba[i + 3] + 1) / 256.0f;
+                _Weights[_Count] = w;
+            }
+            else
+            {
+                _Weights[_Count] = 1.0f;
+            }
+            
+            // advance
+            ++_Count;
+        }        
 
         public void RemapIndices(Byte[] source, Byte[] target)
         {
             for (int i = 0; i < 16; ++i)
             {
-                int j = m_remap[i];
+                int j = _Remap[i];
 
                 target[i] = j == -1 ? (Byte)3 : source[j];
             }
         }
 
-        private int m_count;
-        private bool m_transparent;
+        #endregion
 
-        private readonly Vec3[] m_points = new Vec3[16];
-        private readonly float[] m_weights = new float[16];
-        private readonly int[] m_remap = new int[16];
-        
     };
 
 }
