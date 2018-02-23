@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using SixLabors.ImageSharp;
 
+using StbSharp;
+
 namespace Epsylon.TextureSquish.UnitTests
 {    
     using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.Rgba32>;
@@ -72,9 +74,9 @@ namespace Epsylon.TextureSquish.UnitTests
 
                     // flags bits:
                     // 1 = dither
-                    // 2 = refine count (1 or 2)
+                    // 2 = refine count (1 or 2)                    
 
-                    var bytes = StbSharp.Stb.stb_compress_dxt(srcImage, useAlpha, 2);                    
+                    var bytes = StbDxt.stb_compress_dxt(srcImage, useAlpha, 2);                    
 
                     var dstImage = Bitmap
                         .Decompress(srcImage.Width, srcImage.Height, bytes, mode)
