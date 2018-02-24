@@ -15,6 +15,9 @@
     <None Remove="TestFiles\Ivy1.png" />
     <None Remove="TestFiles\Rainbow_to_alpha_gradient_large.png" />
     <None Remove="TestFiles\Rainbow_to_alpha_gradient_small.png" />
+    <None Remove="TestFiles\rocks-diffuse.png" />
+    <None Remove="TestFiles\rocks-normals.png" />
+    <None Remove="TestFiles\tree.png" />
     <None Remove="UVGrid1.jpg" />
     <None Remove="UVGrid2.jpg" />
   </ItemGroup>
@@ -32,7 +35,16 @@
     <Content Include="TestFiles\Rainbow_to_alpha_gradient_large.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestFiles\rocks-diffuse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\rocks-normals.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestFiles\squish_test_original.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestFiles\tree.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestFiles\UVGrid1.jpg">

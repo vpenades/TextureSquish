@@ -46,6 +46,24 @@ namespace Epsylon.TextureSquish.UnitTests
         }
 
         [TestMethod]
+        public void PerformanceTestRockDiffuse()
+        {
+            _PerformanceTest(TestContext, "TestFiles\\rocks-diffuse.png");
+        }
+
+        [TestMethod]
+        public void PerformanceTestRockNormal()
+        {
+            _PerformanceTest(TestContext, "TestFiles\\rocks-normals.png");
+        }
+
+        [TestMethod]
+        public void PerformanceTestTree()
+        {
+            _PerformanceTest(TestContext, "TestFiles\\tree.png");
+        }
+
+        [TestMethod]
         public void PerformanceTestWorstCase()
         {
             var imagePath = "TestFiles\\ivy1.png";

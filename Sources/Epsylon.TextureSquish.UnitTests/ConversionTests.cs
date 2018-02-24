@@ -47,6 +47,11 @@ namespace Epsylon.TextureSquish.UnitTests
 
             SquishUtils.ProcessFile(method, "TestFiles\\Rainbow_to_alpha_gradient_large.png", TestContext);
             SquishUtils.ProcessFile(method, "TestFiles\\Rainbow_to_alpha_gradient_small.png", TestContext);
+
+            SquishUtils.ProcessFile(method, "TestFiles\\tree.png", TestContext);
+
+            SquishUtils.ProcessFile(method, "TestFiles\\rocks-diffuse.png", TestContext);
+            SquishUtils.ProcessFile(method, "TestFiles\\rocks-normals.png", TestContext);
         }
 
     }
