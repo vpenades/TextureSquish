@@ -44,7 +44,7 @@ namespace Epsylon.TextureSquish.UnitTests
             return dst;
         }
 
-        public static IMAGE SquishImage(this IMAGE srcImage, CompressionMode mode, CompressionOptions options, TestContext context)
+        public static IMAGE SquishImageRoundTrip(this IMAGE srcImage, CompressionMode mode, CompressionOptions options, TestContext context)
         {
             var srcBitmap = srcImage.ToSquishImage();            
 
@@ -54,7 +54,13 @@ namespace Epsylon.TextureSquish.UnitTests
 
             context.WriteLine(dstBitmap.CompareRGBToOriginal(srcBitmap).ToString());
             
-            return dstBitmap.ToImageSharp();
+            var dstImage = dstBitmap.ToImageSharp();
+
+            var result = srcImage.CompareRGBToOriginal(dstImage);
+
+            Assert.IsTrue(result.StandardDeviation < 0.08f);
+
+            return dstImage;
         }
                 
         public static void ProcessFile(string method, string filePath, TestContext context)
@@ -97,7 +103,7 @@ namespace Epsylon.TextureSquish.UnitTests
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
                 context.WriteLine($"{dstFileName} with {mode}");
-                srcImg.SquishImage(mode, options, context).Save(dstFileName);
+                srcImg.SquishImageRoundTrip(mode, options, context).Save(dstFileName);
             }
 
             if (method == "STB")

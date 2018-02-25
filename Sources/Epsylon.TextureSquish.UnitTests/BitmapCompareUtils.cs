@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using MathNet.Numerics.Statistics;
-
+using SixLabors.ImageSharp;
 using Vec3 = System.Numerics.Vector3;
 using Vec4 = System.Numerics.Vector4;
 
@@ -51,7 +51,47 @@ namespace Epsylon.TextureSquish.UnitTests
             return mlenghs.ToArray();
         }
 
+        public static float[] GetRGBManhattanLengthTo(this Image<Rgba32> a, Image<Rgba32> b)
+        {
+            if (a.Width != b.Width || a.Height != b.Height) throw new ArgumentException("bitmaps must be of same size", nameof(b));
+
+            var mlenghs = new List<float>();
+
+            for (int y = 0; y < a.Height; ++y)
+            {
+                for (int x = 0; x < a.Width; ++x)
+                {
+                    var av = a[x,y].ToVector4();
+                    var bv = b[x,y].ToVector4();
+
+                    bool isTransparent = av.W == 0 || bv.W == 0;
+
+                    var rgb = isTransparent ? 0.0f : Vec4.Abs(bv - av)
+                        .GetVec3()
+                        .LengthManhattan();
+
+                    mlenghs.Add(rgb);
+                }
+            }
+
+            return mlenghs.ToArray();
+        }
+
         public static BitmapCompareResult CompareRGBToOriginal(this Bitmap a, Bitmap b)
+        {
+            var mlength = a.GetRGBManhattanLengthTo(b);
+
+            var r = new BitmapCompareResult
+            {
+                StandardDeviation = mlength.StandardDeviation(),
+                Maximum = mlength.MaximumAbsolute(),
+                Median = mlength.Median()
+            };
+
+            return r;
+        }
+
+        public static BitmapCompareResult CompareRGBToOriginal(this Image<Rgba32> a, Image<Rgba32> b)
         {
             var mlength = a.GetRGBManhattanLengthTo(b);
 

@@ -59,9 +59,9 @@ namespace Epsylon.TextureSquish
 
                 for (int i = 0; i < 16; ++i)
                 {
-                    if (indices[i] == 0) remapped[i] = 1;
+                    if      (indices[i] == 0) remapped[i] = 1;
                     else if (indices[i] == 1) remapped[i] = 0;
-                    else remapped[i] = indices[i];
+                    else    remapped[i] = indices[i];
                 }
             }
 
@@ -279,10 +279,7 @@ namespace Epsylon.TextureSquish
         /// <param name="flags">Compression flags.</param>
         public void CompressMasked(Byte[] rgba, int mask, CompressionOptions options)
         {
-            System.Diagnostics.Debug.Assert(rgba != null && rgba.Length == 64, nameof(rgba));
-
-            // fix any bad flags
-            options = options.FixFlags();
+            System.Diagnostics.Debug.Assert(rgba != null && rgba.Length == 64, nameof(rgba));            
 
             // create the minimal point set
             var colours = new ColourSet(rgba, mask, _Mode, options);

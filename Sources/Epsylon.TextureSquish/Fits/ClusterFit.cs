@@ -17,6 +17,8 @@ namespace Epsylon.TextureSquish
         private static readonly Vec4 TWOTHIRDS_TWOTHIRDS2 = new Vec4(2.0f / 3.0f, 2.0f / 3.0f, 2.0f / 3.0f, 4.0f / 9.0f);
         private static readonly Vec4 TWONINETHS = new Vec4(2.0f / 9.0f);
 
+        private static readonly Vec4 PERCEPTUAL = new Vec4(0.2126f, 0.7152f, 0.0722f, 0.0f);
+
         public ClusterFit(ColourSet colours, CompressionOptions flags) : base(colours)
         {
             // set the iteration count
@@ -25,14 +27,10 @@ namespace Epsylon.TextureSquish
             // initialise the metric
             bool perceptual = ((flags & CompressionOptions.ColourMetricPerceptual) != 0);
 
-            m_metric = perceptual ? new Vec4(0.2126f, 0.7152f, 0.0722f, 0.0f) : Vec4.One;
-
-            // cache some values
-            var count = m_colours.Count;
-            var values = m_colours.Points;
+            m_metric = perceptual ? PERCEPTUAL : Vec4.One;            
 
             // get the covariance matrix
-            Sym3x3 covariance = Sym3x3.ComputeWeightedCovariance(count, values, m_colours.Weights);
+            var covariance = Sym3x3.ComputeWeightedCovariance(m_colours.Count, m_colours.Points, m_colours.Weights);
 
             // compute the principle component
             m_principle = Sym3x3.ComputePrincipleComponent(covariance);
