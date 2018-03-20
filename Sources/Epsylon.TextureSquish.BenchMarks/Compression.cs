@@ -11,27 +11,10 @@ namespace Epsylon.TextureSquish.BenchMarks
 {
 
     [RPlotExporter, RankColumn]
+    [BenchmarkDotNet.Attributes.Jobs.SimpleJob(launchCount: 1, warmupCount: 5, targetCount: 5)]
     public class Compression
     {
-        private readonly Dictionary<String, Bitmap> _Bitmaps = new Dictionary<String, Bitmap>();
-
-        [ParamsSource(nameof(ImageNames))]
-        public String ImageName;
-
-        public IEnumerable<String> ImageNames
-        {
-            get
-            {
-                yield return "TestFiles\\rocks-diffuse.png";
-                yield return "TestFiles\\rocks-normals.png";
-                yield return "TestFiles\\tree.png";
-                yield return "TestFiles\\Ivy1.png";
-                yield return "TestFiles\\Rainbow_to_alpha_gradient_large.png";
-                yield return "TestFiles\\UVGrid1.jpg";
-                yield return "TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png";                
-            }
-        }
-
+        private readonly Dictionary<String, Bitmap> _Bitmaps = new Dictionary<String, Bitmap>();                
 
         [GlobalSetup]
         public void ReadImages()
@@ -42,8 +25,24 @@ namespace Epsylon.TextureSquish.BenchMarks
 
                 _Bitmaps[key] = bmp;
             }            
-        }        
+        }
 
+        public IEnumerable<String> ImageNames
+        {
+            get
+            {
+                yield return "TestFiles\\rocks-diffuse.png";
+                // yield return "TestFiles\\rocks-normals.png";
+                // yield return "TestFiles\\tree.png";
+                // yield return "TestFiles\\Ivy1.png";
+                // yield return "TestFiles\\Rainbow_to_alpha_gradient_large.png";
+                // yield return "TestFiles\\UVGrid1.jpg";
+                yield return "TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png";
+            }
+        }
+
+        [ParamsSource(nameof(ImageNames))]
+        public String ImageName;
 
         [Benchmark(Baseline = true, Description = "NVidia Texture Tool")]
         public void NVidiaCompression()
@@ -59,7 +58,7 @@ namespace Epsylon.TextureSquish.BenchMarks
         {
             var bmp = _Bitmaps[ImageName];
 
-            bmp.Compress(CompressionMode.Dxt1, CompressionOptions.ColourIterativeClusterFit);            
+            bmp.Compress(CompressionMode.Dxt1, CompressionOptions.ColourClusterFit);            
         }
     }
 }

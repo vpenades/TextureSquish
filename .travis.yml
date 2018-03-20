@@ -1,5 +1,5 @@
 language: csharp
-solution: Source/Epsylon.TextureSquish.sln
+solution: Sources/Epsylon.TextureSquish.sln
 
 after_script:
   - dotnet test Sources/Epsylon.TextureSquish.UnitTests/Epsylon.TextureSquish.UnitTests.csproj
