@@ -1,5 +1,8 @@
 language: csharp
 solution: Sources/Epsylon.TextureSquish.sln
 
+before_script:
+    - nuget restore Sources
+
 after_script:
   - dotnet test Sources/Epsylon.TextureSquish.UnitTests/Epsylon.TextureSquish.UnitTests.csproj
