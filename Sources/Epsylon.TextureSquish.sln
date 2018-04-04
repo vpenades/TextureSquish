@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Epsylon.TextureSquish.Bench
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Epsylon.TextureSquish.TestUtils", "Epsylon.TextureSquish.TestUtils\Epsylon.TextureSquish.TestUtils.csproj", "{2FA247B0-5B2A-433D-B665-F83EE3785987}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{429B4F44-7F4B-4EFC-A291-25BD7C4888C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{61D1E679-C177-4A16-8154-1C805A434F28} = {429B4F44-7F4B-4EFC-A291-25BD7C4888C5}
+		{ECF6CA0F-AD29-4A29-A475-D24463081D7E} = {429B4F44-7F4B-4EFC-A291-25BD7C4888C5}
+		{2FA247B0-5B2A-433D-B665-F83EE3785987} = {429B4F44-7F4B-4EFC-A291-25BD7C4888C5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {276FDCF0-7512-4920-86D1-BEC8F8F78853}

@@ -10,7 +10,7 @@ using StbSharp;
 
 namespace Epsylon.TextureSquish
 {    
-    using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.Rgba32>;
+    using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 
     public static class SquishUtils
     {
@@ -37,7 +37,7 @@ namespace Epsylon.TextureSquish
             {
                 for (int x = 0; x < dst.Width; ++x)
                 {
-                    dst[x, y] = new SixLabors.ImageSharp.Rgba32( image[x, y]);
+                    dst[x, y] = new SixLabors.ImageSharp.PixelFormats.Rgba32( image[x, y]);
                 }
             }
 
@@ -57,7 +57,7 @@ namespace Epsylon.TextureSquish
             return dstBitmap.ToImageSharp();
         }
                 
-        public static void ProcessFile(string method, string filePath, Action<string> logger)
+        public static void ProcessFile(string method, string filePath, Action<string> logger, Action<string> outFile)
         {
             var srcImg = SixLabors.ImageSharp.Image.Load(filePath);            
 
@@ -83,6 +83,8 @@ namespace Epsylon.TextureSquish
                         .ToImageSharp();
 
                     dstImage.Save(dstFileName);
+
+                    outFile?.Invoke(dstFileName);
                 }
             }
 
@@ -91,6 +93,8 @@ namespace Epsylon.TextureSquish
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
                 logger($"{dstFileName} with {mode}");
                 srcImg.SquishImageWithNvidia(mode, logger).Save(dstFileName);
+
+                outFile?.Invoke(dstFileName);
             }
 
             void processSquish(CompressionMode mode, CompressionOptions options, string ext)
@@ -98,6 +102,8 @@ namespace Epsylon.TextureSquish
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
                 logger($"{dstFileName} with {mode}");
                 srcImg.SquishImage(mode, options, logger).Save(dstFileName);
+
+                outFile?.Invoke(dstFileName);
             }
 
             if (method == "STB")

@@ -6,33 +6,66 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\TestFiles\fight_of_thrones_by_orkimides-d6sa500.png" Link="TestFiles\fight_of_thrones_by_orkimides-d6sa500.png" />
-    <Content Include="..\TestFiles\Ivy1.png" Link="TestFiles\Ivy1.png" />
-    <Content Include="..\TestFiles\Rainbow_to_alpha_gradient_large.png" Link="TestFiles\Rainbow_to_alpha_gradient_large.png" />
-    <Content Include="..\TestFiles\Rainbow_to_alpha_gradient_small.png" Link="TestFiles\Rainbow_to_alpha_gradient_small.png" />
-    <Content Include="..\TestFiles\rocks-diffuse.png" Link="TestFiles\rocks-diffuse.png" />
-    <Content Include="..\TestFiles\rocks-normals.png" Link="TestFiles\rocks-normals.png" />
-    <Content Include="..\TestFiles\squish_test_original.png" Link="TestFiles\squish_test_original.png" />
-    <Content Include="..\TestFiles\tree.png" Link="TestFiles\tree.png" />
-    <Content Include="..\TestFiles\UVGrid1.jpg" Link="TestFiles\UVGrid1.jpg" />
-    <Content Include="..\TestFiles\UVGrid2.jpg" Link="TestFiles\UVGrid2.jpg" />
+    <Folder Include="TestFiles\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="..\TestFiles\fight_of_thrones_by_orkimides-d6sa500.png" Link="TestFiles\fight_of_thrones_by_orkimides-d6sa500.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\Ivy1.png" Link="TestFiles\Ivy1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\Rainbow_to_alpha_gradient_large.png" Link="TestFiles\Rainbow_to_alpha_gradient_large.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\Rainbow_to_alpha_gradient_small.png" Link="TestFiles\Rainbow_to_alpha_gradient_small.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\rocks-diffuse.png" Link="TestFiles\rocks-diffuse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\rocks-normals.png" Link="TestFiles\rocks-normals.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\squish_test_original.png" Link="TestFiles\squish_test_original.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\tree.png" Link="TestFiles\tree.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\UVGrid1.jpg" Link="TestFiles\UVGrid1.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\TestFiles\UVGrid2.jpg" Link="TestFiles\UVGrid2.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 
+  <!-- MSTest framework-->
+  <!--
   <ItemGroup>    
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />  
     <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />    
+    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
+  </ItemGroup>  
+  -->
+
+  <!-- NUnit framework -->
+  <ItemGroup>    
+    <!-- Required for now to keep MSBuild happy https://github.com/Microsoft/vstest/issues/986-->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
+    
+    <packagereference Include="NUnit3TestAdapter" Version="3.10.0"></packagereference>
+    <packagereference Include="NUnit" Version="3.10.1"></packagereference>
   </ItemGroup>
 
   <ItemGroup>    
     <ProjectReference Include="..\Epsylon.TextureSquish.TestUtils\Epsylon.TextureSquish.TestUtils.csproj" />        
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="TestFiles\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
+  </ItemGroup>  
 
 </Project>

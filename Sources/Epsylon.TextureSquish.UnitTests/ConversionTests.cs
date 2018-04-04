@@ -1,57 +1,75 @@
 using System.IO;
+
+
+/*
+//----- MSTest Framework
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TESTCLASS = Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TESTMETHOD = Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TESTMETHODEX = Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute;
+using TESTPARAMS = Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
+using TESTCONTEXT = Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
+*/
+
+//----- NUnit Framework
+using NUnit.Framework;
+using TESTCLASS = NUnit.Framework.TestFixtureAttribute;
+using TESTMETHOD = NUnit.Framework.TestAttribute;
+using TESTMETHODEX = NUnit.Framework.TestAttribute;
+using TESTPARAMS = NUnit.Framework.TestCaseAttribute;
+using TESTCONTEXT = NUnit.Framework.TestContext;
 
 namespace Epsylon.TextureSquish.UnitTests
 {
-    [TestClass]
+    [TESTCLASS]
     public class ConversionTests
     {
-        private TestContext testContextInstance;
-
         /// <summary>
         ///  Gets or sets the test context which provides
         ///  information about and functionality for the current test run.
         ///</summary>
-        public TestContext TestContext
-        {
-            get { return testContextInstance; }
-            set { testContextInstance = value; }
-        }
+        public TestContext TestContext { get; set; }
 
-        [TestMethod]
+        [TESTMETHOD]
         public void ConversionTestNVidiaTextureTool() { _ConversionTest("NVIDIA"); }
 
-        [TestMethod]
+        [TESTMETHOD]
         public void ConversionTestSTB() { _ConversionTest("STB"); }
 
-        [TestMethod]
+        [TESTMETHOD]
         public void ConversionTestRangeFit() { _ConversionTest("RANGEFIT"); }
 
-        [TestMethod]
+        [TESTMETHOD]
         public void ConversionTestClusterFit() { _ConversionTest("CLUSTERFIT"); }
 
-        [TestMethod]
+        [TESTMETHOD]
         public void ConversionTestClusterFitIterative() { _ConversionTest("CLUSTERFIT_ITER"); }
 
 
         private void _ConversionTest(string method)
         {
-            SquishUtils.ProcessFile(method, "TestFiles\\fight_of_thrones_by_orkimides-d6sa500.png",txt=> TestContext.WriteLine(txt));
+            var files = new string[]
+            {
+                "fight_of_thrones_by_orkimides-d6sa500.png",
+                "squish_test_original.png",
+                "UVGrid1.jpg",
+                "UVGrid2.jpg",
+                "Ivy1.png",
+                "Rainbow_to_alpha_gradient_large.png",
+                "Rainbow_to_alpha_gradient_small.png",
+                "tree.png",
+                "rocks-diffuse.png",
+                "rocks-normals.png"
+            };
 
-            SquishUtils.ProcessFile(method, "TestFiles\\squish_test_original.png", txt => TestContext.WriteLine(txt));
+            foreach(var f in files)
+            {
+                System.Console.WriteLine(f);
 
-            SquishUtils.ProcessFile(method, "TestFiles\\UVGrid1.jpg", txt => TestContext.WriteLine(txt));
-            SquishUtils.ProcessFile(method, "TestFiles\\UVGrid2.jpg", txt => TestContext.WriteLine(txt));
+                var ff = System.IO.Path.Combine("TestFiles", f);
 
-            SquishUtils.ProcessFile(method, "TestFiles\\Ivy1.png", txt => TestContext.WriteLine(txt));
-
-            SquishUtils.ProcessFile(method, "TestFiles\\Rainbow_to_alpha_gradient_large.png", txt => TestContext.WriteLine(txt));
-            SquishUtils.ProcessFile(method, "TestFiles\\Rainbow_to_alpha_gradient_small.png", txt => TestContext.WriteLine(txt));
-
-            SquishUtils.ProcessFile(method, "TestFiles\\tree.png", txt => TestContext.WriteLine(txt));
-
-            SquishUtils.ProcessFile(method, "TestFiles\\rocks-diffuse.png", txt => TestContext.WriteLine(txt));
-            SquishUtils.ProcessFile(method, "TestFiles\\rocks-normals.png", txt => TestContext.WriteLine(txt));
+                SquishUtils.ProcessFile(method, ff, txt => TestContext.WriteLine(txt), dstfn => TESTCONTEXT.AddTestAttachment(dstfn));
+            }
         }
 
     }

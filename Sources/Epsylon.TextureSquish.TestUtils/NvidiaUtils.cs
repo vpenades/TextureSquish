@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.Rgba32>;
+using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 
 namespace Epsylon.TextureSquish
 {
