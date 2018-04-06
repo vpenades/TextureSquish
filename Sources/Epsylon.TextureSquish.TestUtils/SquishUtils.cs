@@ -52,7 +52,7 @@ namespace Epsylon.TextureSquish
 
             var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);
 
-            logger(dstBitmap.CompareRGBToOriginal(srcBitmap).ToString());
+            logger("\t" + dstBitmap.CompareRGBToOriginal(srcBitmap).ToString());
             
             return dstBitmap.ToImageSharp();
         }
@@ -122,12 +122,8 @@ namespace Epsylon.TextureSquish
                 processNVidia(CompressionMode.Dxt5, "Dx5-NVidia.png");
                 return;
             }                
-
-            #if DEBUG
-            var xflags = CompressionOptions.None;
-            #else
-            var xflags = CompressionOptions.UseParallelProcessing | CompressionOptions.None;
-            #endif
+            
+            var xflags = CompressionOptions.UseParallelProcessing | CompressionOptions.None;            
 
             if (method == "RANGEFIT")
             {

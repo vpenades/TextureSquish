@@ -28,7 +28,9 @@ namespace Epsylon.TextureSquish.UnitTests
         ///  Gets or sets the test context which provides
         ///  information about and functionality for the current test run.
         ///</summary>
-        public TestContext TestContext { get; set; }
+
+        public TestContext TestContext => NUnit.Framework.TestContext.CurrentContext;
+        //public TestContext TestContext { get; set; }
 
         [TESTMETHOD]
         public void ConversionTestNVidiaTextureTool() { _ConversionTest("NVIDIA"); }
@@ -68,7 +70,9 @@ namespace Epsylon.TextureSquish.UnitTests
 
                 var ff = System.IO.Path.Combine("TestFiles", f);
 
-                SquishUtils.ProcessFile(method, ff, txt => TestContext.WriteLine(txt), dstfn => TESTCONTEXT.AddTestAttachment(dstfn));
+                SquishUtils.ProcessFile(method, ff, txt => TestContext.WriteLine(txt), dstfn => TestContext.AddTestAttachment(dstfn));
+
+                TestContext.WriteLine(string.Empty);
             }
         }
 
