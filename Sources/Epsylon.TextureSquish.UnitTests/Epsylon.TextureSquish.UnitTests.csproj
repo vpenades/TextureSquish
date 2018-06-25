@@ -58,7 +58,7 @@
   <!-- NUnit framework -->
   <ItemGroup>    
     <!-- Required for now to keep MSBuild happy https://github.com/Microsoft/vstest/issues/986-->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />
     
     <packagereference Include="NUnit3TestAdapter" Version="3.10.0"></packagereference>
     <packagereference Include="NUnit" Version="3.10.1"></packagereference>
