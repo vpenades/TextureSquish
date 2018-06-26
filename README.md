@@ -17,5 +17,7 @@ Other Texture Compressors:
  -[NVidia resources](https://developer.nvidia.com/astc-texture-compression-for-game-assets)
 - [Microsoft DirectXTex Tools](https://github.com/Microsoft/DirectXTex)
 - [Binomial](http://www.binomial.info/) [Github](https://github.com/BinomialLLC/crunch)
- -[Ericsson ETC1](https://github.com/Ericsson/ETCPACK)
- -[ARM ASTC](https://github.com/ARM-software/astc-encoder)
+- [Ericsson ETC1](https://github.com/Ericsson/ETCPACK)
+- [ARM ASTC](https://github.com/ARM-software/astc-encoder)
+- [KFreon](https://github.com/KFreon/CSharpImageLibrary)
+- 
