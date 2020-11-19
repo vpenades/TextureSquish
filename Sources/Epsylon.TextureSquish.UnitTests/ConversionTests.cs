@@ -1,27 +1,10 @@
 using System.IO;
 
-
-/*
-//----- MSTest Framework
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TESTCLASS = Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TESTMETHOD = Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using TESTMETHODEX = Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute;
-using TESTPARAMS = Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
-using TESTCONTEXT = Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
-*/
-
-//----- NUnit Framework
 using NUnit.Framework;
-using TESTCLASS = NUnit.Framework.TestFixtureAttribute;
-using TESTMETHOD = NUnit.Framework.TestAttribute;
-using TESTMETHODEX = NUnit.Framework.TestAttribute;
-using TESTPARAMS = NUnit.Framework.TestCaseAttribute;
-using TESTCONTEXT = NUnit.Framework.TestContext;
 
 namespace Epsylon.TextureSquish.UnitTests
 {
-    [TESTCLASS]
+    
     public class ConversionTests
     {
         /// <summary>
@@ -32,19 +15,19 @@ namespace Epsylon.TextureSquish.UnitTests
         public TestContext TestContext => NUnit.Framework.TestContext.CurrentContext;
         //public TestContext TestContext { get; set; }
 
-        [TESTMETHOD]
+        [Test]
         public void ConversionTestNVidiaTextureTool() { _ConversionTest("NVIDIA"); }
 
-        [TESTMETHOD]
+        [Test]
         public void ConversionTestSTB() { _ConversionTest("STB"); }
 
-        [TESTMETHOD]
+        [Test]
         public void ConversionTestRangeFit() { _ConversionTest("RANGEFIT"); }
 
-        [TESTMETHOD]
+        [Test]
         public void ConversionTestClusterFit() { _ConversionTest("CLUSTERFIT"); }
 
-        [TESTMETHOD]
+        [Test]
         public void ConversionTestClusterFitIterative() { _ConversionTest("CLUSTERFIT_ITER"); }
 
 

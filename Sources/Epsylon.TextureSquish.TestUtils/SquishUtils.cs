@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-
-
 using SixLabors.ImageSharp;
 
 using StbSharp;
 
 namespace Epsylon.TextureSquish
 {    
-    using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
+    using IMAGE = Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 
     public static class SquishUtils
     {
@@ -59,7 +57,7 @@ namespace Epsylon.TextureSquish
                 
         public static void ProcessFile(string method, string filePath, Action<string> logger, Action<string> outFile)
         {
-            var srcImg = SixLabors.ImageSharp.Image.Load(filePath);            
+            var srcImg = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(filePath);            
 
             void processSTB(CompressionMode mode, bool useAlpha, string ext)
             {

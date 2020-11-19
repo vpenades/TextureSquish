@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Text;
 
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Attributes.Columns;
-using BenchmarkDotNet.Attributes.Exporters;
 
 namespace Epsylon.TextureSquish.BenchMarks
 {
 
     [RPlotExporter, RankColumn]
-    [BenchmarkDotNet.Attributes.Jobs.SimpleJob(launchCount: 1, warmupCount: 5, targetCount: 5)]
+    [SimpleJob(launchCount: 1, warmupCount: 5, targetCount: 5)]
     public class Compression
     {
         private readonly Dictionary<String, Bitmap> _Bitmaps = new Dictionary<String, Bitmap>();                
@@ -21,7 +19,7 @@ namespace Epsylon.TextureSquish.BenchMarks
         {
             foreach(var key in ImageNames)
             {
-                var bmp = SixLabors.ImageSharp.Image.Load(key).ToSquishImage();
+                var bmp = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(key).ToSquishImage();
 
                 _Bitmaps[key] = bmp;
             }            

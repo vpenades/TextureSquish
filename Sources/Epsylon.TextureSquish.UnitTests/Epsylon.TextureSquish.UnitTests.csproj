@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -44,24 +44,13 @@
   
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
-
-  <!-- MSTest framework-->
-  <!--
-  <ItemGroup>    
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />  
-    <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
   </ItemGroup>  
-  -->
 
-  <!-- NUnit framework -->
-  <ItemGroup>    
-    <!-- Required for now to keep MSBuild happy https://github.com/Microsoft/vstest/issues/986-->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />
-    
-    <packagereference Include="NUnit3TestAdapter" Version="3.10.0"></packagereference>
-    <packagereference Include="NUnit" Version="3.10.1"></packagereference>
+  
+  <ItemGroup>        
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />    
+    <packagereference Include="NUnit3TestAdapter" Version="3.17.0"></packagereference>
+    <packagereference Include="NUnit" Version="3.12.0"></packagereference>
   </ItemGroup>
 
   <ItemGroup>    
