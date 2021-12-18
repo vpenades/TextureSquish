@@ -1,15 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net47</TargetFrameworks>
+    <TargetFrameworks>net6.0;net47</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MathNet.Numerics" Version="4.12.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />    
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2" />
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+    <PackageReference Include="NUnit" Version="3.13.2" />    
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="StbSharp" Version="0.7.2.38" />
+    <PackageReference Include="TeximpNet" Version="1.4.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,13 +23,6 @@
     <Reference Include="Nvidia.TextureTools">
       <HintPath>NvidiaTextureTools\Nvidia.TextureTools.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="NvidiaTextureTools\x64\nvtt.dll">
-      <Link>%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>  
 
 </Project>

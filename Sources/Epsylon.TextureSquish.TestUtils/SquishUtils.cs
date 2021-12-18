@@ -62,6 +62,8 @@ namespace Epsylon.TextureSquish
             void processSTB(CompressionMode mode, bool useAlpha, string ext)
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
+                dstFileName = System.IO.Path.Combine(NUnit.Framework.TestContext.CurrentContext.WorkDirectory, dstFileName);
+
                 logger($"{dstFileName} with {mode}");
                 
                 using (var stream = System.IO.File.OpenRead(filePath))
@@ -89,6 +91,8 @@ namespace Epsylon.TextureSquish
             void processNVidia(CompressionMode mode, string ext)
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
+                dstFileName = System.IO.Path.Combine(NUnit.Framework.TestContext.CurrentContext.WorkDirectory, dstFileName);
+
                 logger($"{dstFileName} with {mode}");
                 srcImg.SquishImageWithNvidia(mode, logger).Save(dstFileName);
 
@@ -98,6 +102,8 @@ namespace Epsylon.TextureSquish
             void processSquish(CompressionMode mode, CompressionOptions options, string ext)
             {
                 var dstFileName = System.IO.Path.ChangeExtension(filePath, ext);
+                dstFileName = System.IO.Path.Combine(NUnit.Framework.TestContext.CurrentContext.WorkDirectory, dstFileName);
+
                 logger($"{dstFileName} with {mode}");
                 srcImg.SquishImage(mode, options, logger).Save(dstFileName);
 

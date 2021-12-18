@@ -19,144 +19,68 @@ namespace Epsylon.TextureSquish
             }
         }
 
-        public static Byte[] CompressWithNvidia(this Bitmap srcImage, CompressionMode mode)
-        {
-            System.Diagnostics.Debug.Assert(IntPtr.Size == 8, "nvtt.dll(x64) requires x64 runtime");
-
-            srcImage = srcImage.Clone();
-            srcImage.SwapElements(2, 1, 0, 3);
-
-            var inputOptions = new Nvidia.TextureTools.InputOptions();
-            inputOptions.SetTextureLayout(Nvidia.TextureTools.TextureType.Texture2D, srcImage.Width, srcImage.Height, 1);
-            inputOptions.SetMipmapGeneration(false);
-            inputOptions.SetGamma(1.0f, 1.0f);
-            if ((mode & CompressionMode.Dxt1) == 0) inputOptions.SetAlphaMode(Nvidia.TextureTools.AlphaMode.Premultiplied);
-            else inputOptions.SetAlphaMode(Nvidia.TextureTools.AlphaMode.None);            
-
-            var compressionOptions = new Nvidia.TextureTools.CompressionOptions();
-            compressionOptions.SetQuality(Nvidia.TextureTools.Quality.Normal);
-            if ((mode & CompressionMode.Dxt1) != 0) compressionOptions.SetFormat(Nvidia.TextureTools.Format.DXT1);
-            if ((mode & CompressionMode.Dxt3) != 0) compressionOptions.SetFormat(Nvidia.TextureTools.Format.DXT3);
-            if ((mode & CompressionMode.Dxt5) != 0) compressionOptions.SetFormat(Nvidia.TextureTools.Format.DXT5);            
-
-            return DxtDataHandler.Compress(srcImage.Data, srcImage.Width,srcImage.Height, inputOptions, compressionOptions);            
-        }
-
         public static IMAGE SquishImageWithNvidia(this IMAGE srcImage, CompressionMode mode, Action<string> logger)
         {
             var srcBitmap = srcImage.ToSquishImage();
 
             var blocks = srcBitmap.CompressWithNvidia(mode);
 
-            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);            
+            var dstBitmap = Bitmap.Decompress(srcImage.Width, srcImage.Height, blocks, mode);
 
             return dstBitmap.ToImageSharp();
         }
-    }
 
-    public class DxtDataHandler : IDisposable
-    {
-        #region lifecycle
 
-        private DxtDataHandler(Nvidia.TextureTools.OutputOptions outputOptions)
+        public static Byte[] CompressWithNvidia(this Bitmap srcImage, CompressionMode mode)
         {
-            _WriteData = new Nvidia.TextureTools.OutputOptions.WriteDataDelegate(WriteDataInternal);
-            _BeginImage = new Nvidia.TextureTools.OutputOptions.ImageDelegate(BeginImageInternal);
+            // System.Diagnostics.Debug.Assert(IntPtr.Size == 8, "nvtt.dll(x64) requires x64 runtime");
 
-            // Keep the delegate from being re-located or collected by the garbage collector.
-            delegateHandleBeginImage = GCHandle.Alloc(_BeginImage);
-            delegateHandleWriteData = GCHandle.Alloc(_WriteData);
+            srcImage = srcImage.Clone();
+            srcImage.SwapElements(2, 1, 0, 3);
 
-            outputOptions.SetOutputHandler(_BeginImage, _WriteData);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
+            using (var ddsCompressor = new TeximpNet.Compression.Compressor())
             {
-                if (disposing)
-                {
-                    // Release managed objects
-                    // ...
-                }
+                var inputOptions = ddsCompressor.Input;
+                inputOptions.SetTextureLayout(TeximpNet.Compression.TextureType.Texture2D, srcImage.Width, srcImage.Height, 1);
+                inputOptions.SetMipmapGeneration(false);
+                inputOptions.SetGamma(1.0f, 1.0f);
+                inputOptions.AlphaMode = (mode & CompressionMode.Dxt1) == 0
+                    ? TeximpNet.Compression.AlphaMode.Premultiplied
+                    : TeximpNet.Compression.AlphaMode.None;
 
-                // Release native objects
-                delegateHandleBeginImage.Free();
-                delegateHandleWriteData.Free();
+                var compressionOptions = ddsCompressor.Compression;
+                compressionOptions.Quality = TeximpNet.Compression.CompressionQuality.Normal;
+                if ((mode & CompressionMode.Dxt1) != 0) compressionOptions.Format = TeximpNet.Compression.CompressionFormat.DXT1;
+                if ((mode & CompressionMode.Dxt3) != 0) compressionOptions.Format = TeximpNet.Compression.CompressionFormat.DXT3;
+                if ((mode & CompressionMode.Dxt5) != 0) compressionOptions.Format = TeximpNet.Compression.CompressionFormat.DXT5;
 
-                disposed = true;
-            }
+                return Compress(srcImage.Data, srcImage.Width, srcImage.Height, ddsCompressor);
+            }                    
         }
 
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
+        private static unsafe Byte[] Compress(Byte[] data, int width, int height, TeximpNet.Compression.Compressor ddsCompressor)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~DxtDataHandler()
-        {
-            Dispose(false);
-        }
-
-        #endregion
-
-        #region data
-
-        private bool disposed = false;
-
-        private byte[] _buffer;
-        private int _offset;
-
-        private GCHandle delegateHandleBeginImage;
-        private GCHandle delegateHandleWriteData;
-
-        private Nvidia.TextureTools.OutputOptions.WriteDataDelegate _WriteData;
-        private Nvidia.TextureTools.OutputOptions.ImageDelegate _BeginImage;
-
-        #endregion        
-
-        #region code
-
-        void BeginImageInternal(int size, int width, int height, int depth, int face, int miplevel)
-        {
-            _buffer = new byte[size];
-            _offset = 0;
-        }
-
-        bool WriteDataInternal(IntPtr data, int length)
-        {
-            Marshal.Copy(data, _buffer, _offset, length);
-            _offset += length;
-            return true;
-        }
-
-        #endregion
-
-        #region API
-
-        public static Byte[] Compress(Byte[] data, int width, int height, Nvidia.TextureTools.InputOptions inOptions, Nvidia.TextureTools.CompressionOptions compressionOptions)
-        {
-            var dxtCompressor = new Nvidia.TextureTools.Compressor();
-
             var dataHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
 
             try
             {
                 var dataPtr = dataHandle.AddrOfPinnedObject();
-                inOptions.SetMipmapData(dataPtr, width, height, 1, 0, 0);
+                var mipData = new TeximpNet.DDS.MipData(width, height, width * 4, dataPtr, false);
 
-                var outOptions = new Nvidia.TextureTools.OutputOptions();
-                outOptions.SetOutputHeader(false);
+                ddsCompressor.Input.SetMipmapData(mipData, true);
+                ddsCompressor.Output.OutputHeader = false;
 
-                using (var dataHandler = new DxtDataHandler(outOptions))
+                if (ddsCompressor.Process(out var compressedImages))
                 {
-                    dxtCompressor.Compress(inOptions, compressionOptions, outOptions);
+                    var outData = compressedImages.MipChains[0][0];
 
-                    return dataHandler._buffer;
+                    var outSpan = new Span<Byte>((Byte*)outData.Data, outData.SizeInBytes);
+
+                    return outSpan.ToArray();
                 }
+
+                throw new Exception(ddsCompressor.LastErrorString);
+
             }
             finally
             {
@@ -164,6 +88,5 @@ namespace Epsylon.TextureSquish
             }
         }
 
-        #endregion
     }
 }
