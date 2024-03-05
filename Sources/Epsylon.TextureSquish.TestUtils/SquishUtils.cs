@@ -8,7 +8,7 @@ using StbSharp;
 
 namespace Epsylon.TextureSquish
 {    
-    using IMAGE = Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
+    using IMAGE = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 
     public static class SquishUtils
     {

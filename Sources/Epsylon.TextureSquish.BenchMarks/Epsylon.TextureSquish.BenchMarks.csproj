@@ -1,14 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net47</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net47'">
-    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>  
 
   <ItemGroup>
     <Content Include="..\TestFiles\fight_of_thrones_by_orkimides-d6sa500.png" Link="TestFiles\fight_of_thrones_by_orkimides-d6sa500.png">
